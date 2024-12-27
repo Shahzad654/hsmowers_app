@@ -18,7 +18,7 @@ class AppColors {
 
 
 class AppTextSizes {
-  // Standard sizes for headings
+  
   static const double h1 = 32.0; // Large heading
   static const double h2 = 28.0; // Second-level heading
   static const double h3 = 24.0; // Third-level heading
@@ -26,7 +26,7 @@ class AppTextSizes {
   static const double h5 = 18.0; // Fifth-level heading
   static const double h6 = 16.0; // Sixth-level heading
 
-  // Standard paragraph size
+
   static const double para = 14.0; // Body text (default paragraph)
 }
 
@@ -35,7 +35,7 @@ class AppTextStyles {
     fontFamily: 'Poppins',
     fontSize: AppTextSizes.h1,
     fontWeight:
-        FontWeight.bold, // You can change this to FontWeight.normal or others
+        FontWeight.bold, 
     color: AppColors.textColor,
   );
   static const TextStyle h2 = TextStyle(

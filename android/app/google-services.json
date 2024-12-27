@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "270864439416",
+    "project_id": "hs-mowers-cb290",
+    "storage_bucket": "hs-mowers-cb290.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:270864439416:android:a698f26a80086da6fff58d",
+        "android_client_info": {
+          "package_name": "com.example.hsmowers_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "270864439416-dhs9f2p875unb4hvb55bhb063mqhnn1h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfDJ9e4SK6WIpdbLtq4LrztIXu7lywgb0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "270864439416-dhs9f2p875unb4hvb55bhb063mqhnn1h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -35,7 +35,7 @@ class _LoginState extends State<Login> {
                   cursorColor: AppColors.textColorLight,
                   decoration: InputDecoration(
                       filled: true,
-                      hintText: 'email',
+                      hintText: 'Email',
                       prefixIcon: Icon(Icons.email,
                         color: AppColors.primary,
                       ),
@@ -61,7 +61,7 @@ class _LoginState extends State<Login> {
                   cursorColor: AppColors.textColorLight,
                   decoration: InputDecoration(
                       filled: true,
-                      hintText: 'password',
+                      hintText: 'Password',
                       prefixIcon: Icon(Icons.visibility, color: AppColors.primary,),
                       fillColor: Colors.white,
                       enabledBorder: OutlineInputBorder(
@@ -97,7 +97,7 @@ class _LoginState extends State<Login> {
                 height: 20,
               ),
 
-              Text('Forget Password?', style: AppTextStyles.h4.copyWith(decoration: TextDecoration.underline)),
+              Text('Forget Password?', style: AppTextStyles.h5.copyWith(decoration: TextDecoration.underline)),
                SizedBox(
                 height: 20,
               ),

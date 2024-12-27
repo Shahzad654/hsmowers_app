@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void redirectToLogin(){
-    Timer.periodic(Duration(seconds: 10), (timer){
+    Timer.periodic(Duration(seconds: 4), (timer){
       Navigator.push(context, MaterialPageRoute(builder: (context)=> Login()));
     });
   }
@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
             image: AssetImage('images/hsmowerslogo.png'))
             ),
             SizedBox(height: 25,),
-            Center(child: Text('Your Lawn, Our Care!', style: AppTextStyles.h2.copyWith(color: Colors.white)))
+            Center(child: Text('HS Mowers', style: AppTextStyles.h2.copyWith(color: Colors.white)))
         ],
       ),
     );

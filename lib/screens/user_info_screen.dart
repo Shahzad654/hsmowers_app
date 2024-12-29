@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hsmowers_app/models/user_info_model.dart';
 import 'package:hsmowers_app/providers/user_info_provider.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/widgets/google_maps.dart';
@@ -77,9 +76,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       submitForm(context, ref);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                GoogleMaps()), // Replace `NextScreen` with your desired screen widget.
+        MaterialPageRoute(builder: (context) => GoogleMaps()),
       );
     }
   }

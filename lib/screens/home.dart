@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/screens/pricing_screen.dart';
-import 'package:hsmowers_app/screens/signup.dart';
+import 'package:hsmowers_app/screens/user_info_screen.dart';
 import 'package:hsmowers_app/theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,7 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Confirm Your Status',
+            title: Text(
+              'Confirm Your Status',
               style: AppTextStyles.h4.copyWith(color: Colors.black),
             ),
             content: Text('Sorry, we only have jobs for high school students.'),
@@ -39,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } else if (_selectedConsent == 1) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Signup()));
+          context, MaterialPageRoute(builder: (context) => UserInfoScreen()));
     }
   }
 
@@ -130,7 +131,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Material(
                         color: Colors.transparent,
                         child: AlertDialog(
-                          title: Text('Consent Form', style: AppTextStyles.h4.copyWith(color: Colors.black),),
+                          title: Text(
+                            'Consent Form',
+                            style:
+                                AppTextStyles.h4.copyWith(color: Colors.black),
+                          ),
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [

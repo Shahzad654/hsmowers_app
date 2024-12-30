@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hsmowers_app/theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class GoogleMaps extends StatefulWidget {
   const GoogleMaps({super.key});
@@ -18,25 +20,36 @@ class _GoogleMapsState extends State<GoogleMaps> {
   Completer<GoogleMapController> _controller = Completer();
 
   List<Marker> _marker = [];
-  List<Marker> _list = const [
-    Marker(
-        markerId: MarkerId('1'),
-        position: LatLng(32.18117, 74.18513),
-        infoWindow: InfoWindow(title: "Location")),
-    Marker(
-        markerId: MarkerId('2'),
-        position: LatLng(32.18115, 74.18500),
-        infoWindow: InfoWindow(title: "Location"))
-  ];
-
-  Set<Polygon> _polygons = Set<Polygon>();
-
+  Set<Polygon> _polygons = <Polygon>{};
   List<LatLng> _polygonPoints = [];
+
+  late double _latitude;
+  late double _longitude;
+  bool _isLatLongLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _marker.addAll((_list));
+    _loadLatLng();
+  }
+
+  Future<void> _loadLatLng() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? latLongString = prefs.getString('User_LatLong');
+
+    if (latLongString != null) {
+      Map<String, dynamic> latLong = jsonDecode(latLongString);
+      setState(() {
+        _latitude = latLong['latitude'];
+        _longitude = latLong['longitude'];
+        _isLatLongLoaded = true;
+      });
+      print('Loaded LatLng: $_latitude, $_longitude');
+    } else {
+      _latitude = 32.18117;
+      _longitude = 74.18513;
+      _isLatLongLoaded = true;
+    }
   }
 
   void _onTap(LatLng point) {
@@ -85,15 +98,29 @@ class _GoogleMapsState extends State<GoogleMaps> {
           ),
         ],
       ),
-      body: GoogleMap(
-        initialCameraPosition: _kGooglePlex,
-        markers: Set<Marker>.of(_marker),
-        polygons: _polygons,
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-        onTap: _onTap,
-      ),
+      body: !_isLatLongLoaded
+          ? Center(
+              child: CircularProgressIndicator(
+              color: AppColors.primary,
+            ))
+          : GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(_latitude, _longitude),
+                zoom: 14,
+              ),
+              markers: {
+                Marker(
+                  markerId: MarkerId('user_location'),
+                  position: LatLng(_latitude, _longitude),
+                  infoWindow: InfoWindow(title: "Your Location"),
+                ),
+              },
+              polygons: _polygons,
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+              onTap: _onTap,
+            ),
     );
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 
 class AddressToCode extends StatefulWidget {
+  const AddressToCode({super.key});
+
   @override
   _AddressToCodeState createState() => _AddressToCodeState();
 }
@@ -13,7 +15,7 @@ class _AddressToCodeState extends State<AddressToCode> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Geocoding Example'),
+        title: const Text('Geocoding Example'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -22,7 +24,7 @@ class _AddressToCodeState extends State<AddressToCode> {
           children: [
             Center(
               child: ElevatedButton(
-                child: Text('Look up hardcoded location'),
+                child: const Text('Look up hardcoded location'),
                 onPressed: () async {
                   String hardcodedAddress =
                       '1600 Amphitheatre Parkway, Mountain View, CA';

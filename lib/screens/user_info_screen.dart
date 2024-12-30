@@ -3,11 +3,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hsmowers_app/models/user_info_model.dart';
 import 'package:hsmowers_app/providers/user_info_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hsmowers_app/screens/signup.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/widgets/google_maps.dart';
+import 'package:hsmowers_app/utils/code_to_latlang.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
 
 class UserInfoScreen extends StatefulWidget {
   @override
@@ -76,7 +81,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       submitForm(context, ref);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => GoogleMaps()),
+        MaterialPageRoute(builder: (context) => Signup()),
       );
     }
   }
@@ -87,36 +92,54 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     }
   }
 
-  void submitForm(BuildContext context, WidgetRef ref) {
+  void submitForm(BuildContext context, WidgetRef ref) async {
     if (!_formKey.currentState!.validate()) return;
 
-    final formData = {
-      'fullName': fullNameController.text,
-      'userName': userNameController.text,
-      'phoneNumber': phoneNumController.text,
-      'services': selectedServices,
-      'serviceDistance': serviceDistance,
-      'schoolName': schoolNameController.text,
-      'grade': selectedGrade,
-      'description': descriptionController.text,
-      'address': addressCodeController.text,
-      'hasProfileImage': profileImage != null,
-    };
+    final addressCode = addressCodeController.text.trim();
 
-    ref.read(userInfoProvider.notifier).addUserInfo(
-          fullName: fullNameController.text,
-          userName: userNameController.text,
-          phoneNumber: phoneNumController.text,
-          selectedServices: selectedServices,
-          serviceDistance: serviceDistance,
-          schoolName: schoolNameController.text,
-          selectedGrade: selectedGrade,
-          profileImage: profileImage,
-          description: descriptionController.text,
-          zipCode: addressCodeController.text,
-        );
+    try {
+      Map<String, double> latLong = await convertZipToLatLong(addressCode);
+      print(
+          'Latitude: ${latLong['latitude']}, Longitude: ${latLong['longitude']}');
 
-    print('Form submitted successfully');
+      final formData = {
+        'fullName': fullNameController.text,
+        'userName': userNameController.text,
+        'phoneNumber': phoneNumController.text,
+        'services': selectedServices,
+        'serviceDistance': serviceDistance,
+        'schoolName': schoolNameController.text,
+        'grade': selectedGrade,
+        'description': descriptionController.text,
+        'address': addressCode,
+        'latitude': latLong['latitude'],
+        'longitude': latLong['longitude'],
+        'hasProfileImage': profileImage != null,
+      };
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('UserInfo_Shared_Perference', jsonEncode(formData));
+
+      ref.read(userInfoProvider.notifier).addUserInfo(
+            fullName: fullNameController.text,
+            userName: userNameController.text,
+            phoneNumber: phoneNumController.text,
+            selectedServices: selectedServices,
+            serviceDistance: serviceDistance,
+            schoolName: schoolNameController.text,
+            selectedGrade: selectedGrade,
+            profileImage: profileImage,
+            description: descriptionController.text,
+            zipCode: addressCode,
+          );
+
+      print('Form submitted successfully');
+    } catch (e) {
+      print('Error during geocoding: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to convert ZIP code: $e')),
+      );
+    }
   }
 
   @override
@@ -471,9 +494,10 @@ class Step4Widget extends StatelessWidget {
           label: 'Zip Code or Address',
           keyboardType: TextInputType.text,
           validator: (value) {
-            if (value?.isEmpty ?? true) return 'Please enter zip code';
+            if (value?.isEmpty ?? true)
+              return 'Please enter zip code or address';
             if (value!.length != 5 || value == '')
-              return 'Please enter a valid zip code';
+              return 'Please enter a valid zip code or address';
             return null;
           },
         ),
@@ -503,6 +527,7 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      cursorColor: AppColors.textColorLight,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(

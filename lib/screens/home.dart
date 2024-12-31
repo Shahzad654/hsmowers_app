@@ -1,10 +1,11 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_unnecessary_containers
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/screens/pricing_screen.dart';
 import 'package:hsmowers_app/screens/user_info_screen.dart';
 import 'package:hsmowers_app/theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +16,44 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int? _selectedConsent;
+  bool _loading = true; // changed to non-nullable
+  List<Map<String, dynamic>> userData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  Future<void> getData() async {
+    final collectionRef = FirebaseFirestore.instance.collection('userInfo');
+    final query = collectionRef.orderBy('createdAt', descending: true).limit(4);
+
+    try {
+      final querySnapshot = await query.get();
+      final List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in querySnapshot.docs) {
+        print('${doc.id} => ${doc.data()}');
+        fetchedData.add({
+          'id': doc.id,
+          ...doc.data(),
+        });
+      }
+
+      if (fetchedData.isNotEmpty) {
+        setState(() {
+          userData = fetchedData;
+        });
+      }
+    } catch (error) {
+      print('Error fetching documents: $error');
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
 
   void _handleSubmit() {
     if (_selectedConsent == 2 || _selectedConsent == 3) {
@@ -51,9 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(
-                height: 20,
-              ),
+              SizedBox(height: 20),
               Center(
                   child: Image(
                       height: 130,
@@ -111,15 +148,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   SizedBox(height: 15),
                   ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor:
-                            WidgetStateProperty.all(AppColors.primaryDark),
-                      ),
-                      onPressed: () {},
-                      child: Text(
-                        'Find Mower',
-                        style: AppTextStyles.h5.copyWith(color: Colors.white),
-                      )),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all(AppColors.primaryDark),
+                    ),
+                    onPressed: () {},
+                    child: Text(
+                      'Find Mower',
+                      style: AppTextStyles.h5.copyWith(color: Colors.white),
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 40),
@@ -182,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               ElevatedButton(
                                 style: ButtonStyle(
-                                    backgroundColor: WidgetStateProperty.all(
+                                    backgroundColor: MaterialStateProperty.all(
                                         AppColors.primaryDark)),
                                 onPressed: _handleSubmit,
                                 child: Text(
@@ -219,38 +257,65 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: AppTextStyles.h4.copyWith(color: Colors.black),
               ),
               SizedBox(height: 20),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: 4,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.primary),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListTile(
-                      contentPadding: EdgeInsets.all(10),
-                      trailing: CircleAvatar(
-                        backgroundImage: AssetImage('images/mowers1.jpg'),
+
+              // Display loading or fetched data
+              _loading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
                       ),
-                      title: Text('Muhammad Shahzad'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Senior'),
-                          SizedBox(height: 4),
-                          Text(
-                            'Mowing, Weeding, Leaf-Removal',
-                            style: TextStyle(color: Colors.grey),
+                    )
+                  : userData.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No profiles available',
+                            style: AppTextStyles.h5,
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: userData.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 16),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.primary),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.all(10),
+                                trailing: CircleAvatar(
+                                  backgroundImage:
+                                      userData[index]['photoURL'] != null
+                                          ? NetworkImage(
+                                              userData[index]['photoURL'])
+                                          : AssetImage('images/mowers1.jpg')
+                                              as ImageProvider,
+                                ),
+                                title: Text(
+                                  userData[index]['displayName'] ?? 'No Name',
+                                  style: AppTextStyles.h5
+                                      .copyWith(color: Colors.black),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        userData[index]['grade'] ?? 'No Grade'),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      userData[index]['services']?.join(', ') ??
+                                          'No Services Listed',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
             ],
           ),
         ),

@@ -1,14 +1,13 @@
 // ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, curly_braces_in_flow_control_structures
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hsmowers_app/models/user_info_model.dart';
 import 'package:hsmowers_app/providers/user_info_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hsmowers_app/screens/signup.dart';
 import 'package:hsmowers_app/theme.dart';
-import 'package:hsmowers_app/widgets/google_maps.dart';
 import 'package:hsmowers_app/utils/code_to_latlang.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -102,8 +101,29 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       print(
           'Latitude: ${latLong['latitude']}, Longitude: ${latLong['longitude']}');
 
+      File? imageFile = profileImage;
+      String imageUrl = '';
+
+      if (imageFile != null) {
+        try {
+          String fileName =
+              'profilePics/${DateTime.now().millisecondsSinceEpoch}.jpg';
+          TaskSnapshot uploadTask =
+              await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
+
+          imageUrl = await uploadTask.ref.getDownloadURL();
+          print('Image uploaded successfully: $imageUrl');
+        } catch (e) {
+          print('Error uploading image: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload profile image: $e')),
+          );
+          return;
+        }
+      }
+
       final formData = {
-        'fullName': fullNameController.text,
+        'displayName': fullNameController.text,
         'userName': userNameController.text,
         'phoneNumber': phoneNumController.text,
         'services': selectedServices,
@@ -114,11 +134,12 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         'address': addressCode,
         'latitude': latLong['latitude'],
         'longitude': latLong['longitude'],
-        'hasProfileImage': profileImage != null,
+        'photoURL': imageUrl,
       };
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('UserInfo_Shared_Perference', jsonEncode(formData));
+      print('User info saved to SharedPreferences successfully');
 
       ref.read(userInfoProvider.notifier).addUserInfo(
             fullName: fullNameController.text,
@@ -133,7 +154,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             zipCode: addressCode,
           );
 
-      print('Form submitted successfully');
+      print('Form data cached successfully');
     } catch (e) {
       print('Error during geocoding: $e');
       ScaffoldMessenger.of(context).showSnackBar(

@@ -3,8 +3,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
 class GoogleMaps extends StatefulWidget {
@@ -35,7 +37,7 @@ class _GoogleMapsState extends State<GoogleMaps> {
 
   Future<void> _loadLatLng() async {
     final prefs = await SharedPreferences.getInstance();
-    String? latLongString = prefs.getString('User_LatLong');
+    String? latLongString = prefs.getString('UserInfo_Shared_Perference');
 
     if (latLongString != null) {
       Map<String, dynamic> latLong = jsonDecode(latLongString);
@@ -68,15 +70,45 @@ class _GoogleMapsState extends State<GoogleMaps> {
     });
   }
 
-  void _finishDrawing() {
-    setState(() {
-      if (_polygonPoints.isNotEmpty) {
-        print('Final Polygon Coordinates:');
-        for (var point in _polygonPoints) {
-          print("Lat: ${point.latitude}, Lng: ${point.longitude}");
-        }
+  void _finishDrawing() async {
+    if (_polygonPoints.isNotEmpty) {
+      print('Final Polygon Coordinates:');
+      for (var point in _polygonPoints) {
+        print("Lat: ${point.latitude}, Lng: ${point.longitude}");
       }
-    });
+
+      List<Map<String, double>> polygonCoordinates =
+          _polygonPoints.map((point) {
+        return {
+          'latitude': point.latitude,
+          'longitude': point.longitude,
+        };
+      }).toList();
+
+      try {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? uid = prefs.getString('uid');
+
+        if (uid != null) {
+          await FirebaseFirestore.instance
+              .collection('userInfo')
+              .doc(uid)
+              .update({
+            'serviceArea': polygonCoordinates,
+          });
+
+          print('Polygon saved to Firestore successfully.');
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => UserProfile()));
+        } else {
+          print('Email not found in shared preferences.');
+        }
+      } catch (e) {
+        print('Error saving polygon: $e');
+      }
+
+      setState(() {});
+    }
   }
 
   @override

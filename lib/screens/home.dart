@@ -2,10 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:hsmowers_app/screens/login.dart';
+import 'package:hsmowers_app/screens/other_user_profile.dart';
 import 'package:hsmowers_app/screens/pricing_screen.dart';
 import 'package:hsmowers_app/screens/user_info_screen.dart';
+import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hsmowers_app/widgets/find_mowers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,13 +20,18 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int? _selectedConsent;
-  bool _loading = true; // changed to non-nullable
+  bool _loading = true;
   List<Map<String, dynamic>> userData = [];
+  String? enteredZipCode;
+  String? photoURL;
+  bool isLoggedIn = false;
 
   @override
   void initState() {
     super.initState();
     getData();
+    _getUserData();
+    _getPhotoURL();
   }
 
   Future<void> getData() async {
@@ -83,10 +92,46 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _getUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      print(isLoggedIn);
+    });
+  }
+
+  Future<void> _getPhotoURL() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedPhotoURL = prefs.getString('photoURL');
+    setState(() {
+      photoURL = storedPhotoURL;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: isLoggedIn && photoURL != null
+                  ? InkWell(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => UserProfile()));
+                      },
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(photoURL!),
+                      ),
+                    )
+                  : SizedBox.shrink(),
+            ),
+          ],
+        ),
         body: SingleChildScrollView(
           child: Column(
             children: [
@@ -126,33 +171,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   SizedBox(height: 30),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 30, right: 30),
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                        hintText: 'Enter zip code or address',
-                        suffixIcon: Icon(Icons.search),
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide:
-                              BorderSide(color: AppColors.textColorLight),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                  ),
                   SizedBox(height: 15),
                   ElevatedButton(
                     style: ButtonStyle(
                       backgroundColor:
-                          MaterialStateProperty.all(AppColors.primaryDark),
+                          WidgetStateProperty.all(AppColors.primaryDark),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => FindMowers()));
+                    },
                     child: Text(
                       'Find Mower',
                       style: AppTextStyles.h5.copyWith(color: Colors.white),
@@ -220,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               ElevatedButton(
                                 style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.all(
+                                    backgroundColor: WidgetStateProperty.all(
                                         AppColors.primaryDark)),
                                 onPressed: _handleSubmit,
                                 child: Text(
@@ -257,8 +287,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: AppTextStyles.h4.copyWith(color: Colors.black),
               ),
               SizedBox(height: 20),
-
-              // Display loading or fetched data
               _loading
                   ? Center(
                       child: CircularProgressIndicator(
@@ -277,6 +305,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           physics: NeverScrollableScrollPhysics(),
                           itemCount: userData.length,
                           itemBuilder: (context, index) {
+                            final username =
+                                userData[index]['userName'] ?? 'No Username';
                             return Container(
                               margin: EdgeInsets.symmetric(
                                   vertical: 8, horizontal: 16),
@@ -312,6 +342,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ],
                                 ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          OtherUsers(username: username),
+                                    ),
+                                  );
+                                },
                               ),
                             );
                           },

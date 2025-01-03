@@ -51,6 +51,7 @@ dependencies:
   firebase_app_check: ^0.3.1+7
   cached_network_image: ^3.4.1
   http: ^1.2.2
+  flutter_svg: ^2.0.16
   
 
 dev_dependencies:
@@ -89,6 +90,15 @@ flutter:
     - images/profilebanner.jpg
     - images/profile.jpg
     - images/map.png
+    - images/continuewithgoogle.png
+    - images/babysitting.svg
+    - images/dogwalking.svg
+    - images/edging.svg
+    - images/lawnmower.svg
+    - images/leafremoval.svg
+    - images/snowremoval.svg
+    - images/weeding.svg
+    - images/windowcleaning.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

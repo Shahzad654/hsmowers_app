@@ -13,12 +13,12 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 
-class UserInfoScreen extends StatefulWidget {
+class EditProfile extends StatefulWidget {
   @override
-  State<UserInfoScreen> createState() => _UserInfoScreenState();
+  State<EditProfile> createState() => _EditProfileState();
 }
 
-class _UserInfoScreenState extends State<UserInfoScreen> {
+class _EditProfileState extends State<EditProfile> {
   final _formKey = GlobalKey<FormState>();
   int currentStep = 0;
 
@@ -33,6 +33,16 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   double serviceDistance = 0;
   String? selectedGrade;
   File? profileImage;
+  String? photoURL;
+  String? grade;
+  String? description;
+  String? services;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserData();
+  }
 
   @override
   void dispose() {
@@ -91,6 +101,42 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     }
   }
 
+  Future<void> _getUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedDisplayName = prefs.getString('displayName');
+    String? storedUserName = prefs.getString('userName');
+    String? storedPhoneNum = prefs.getString('phoneNum');
+    String? storedDescription = prefs.getString('description');
+    String? storedGrade = prefs.getString('grade');
+    String? storedServices = prefs.getString('services');
+    String? storedServiceDistance = prefs.getString('serviceDistance');
+    String? storedSchoolName = prefs.getString('schoolName');
+
+    List<dynamic>? decodedServices;
+    if (storedServices != null) {
+      try {
+        decodedServices = jsonDecode(storedServices);
+      } catch (e) {
+        print("Error decoding services: $e");
+      }
+    }
+
+    setState(() {
+      fullNameController.text = storedDisplayName ?? '';
+      userNameController.text = storedUserName ?? '';
+      phoneNumController.text = storedPhoneNum ?? '';
+      schoolNameController.text = storedSchoolName ?? '';
+      descriptionController.text = storedDescription ?? '';
+      grade = storedGrade;
+      serviceDistance = storedServiceDistance != null
+          ? double.tryParse(storedServiceDistance) ?? 0
+          : 0;
+      services = decodedServices?.join(', ') ?? 'No services';
+      services = decodedServices?.join(', ') ?? 'No services';
+      selectedServices = List<String>.from(decodedServices ?? []);
+    });
+  }
+
   void submitForm(BuildContext context, WidgetRef ref) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -131,7 +177,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         'schoolName': schoolNameController.text,
         'grade': selectedGrade,
         'description': descriptionController.text,
-        'zipCode': addressCode,
+        'address': addressCode,
         'latitude': latLong['latitude'],
         'longitude': latLong['longitude'],
         'photoURL': imageUrl,
@@ -175,7 +221,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             appBar: AppBar(
               backgroundColor: AppColors.primary,
               title: Text(
-                'Profile Setup',
+                'Edit Profile',
                 style: TextStyle(color: Colors.white, fontSize: 20),
               ),
               centerTitle: true,
@@ -189,7 +235,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Create your business profile',
+                      'Edit your business profile',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),

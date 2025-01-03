@@ -45,7 +45,6 @@ class _LoginState extends State<Login> {
   Future<void> storeUserDataInPreferences(Map<String, dynamic> userData) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // Save individual fields
     await prefs.setString('userName', userData['userName'] ?? '');
     await prefs.setString('email', userData['email'] ?? '');
     await prefs.setString('photoURL', userData['photoURL'] ?? '');
@@ -267,7 +266,9 @@ class _LoginState extends State<Login> {
                   ),
                   SizedBox(height: 20),
                   Text('Login using', style: AppTextStyles.h6),
-                  Image(height: 50, image: AssetImage('images/google.jpg')),
+                  Image(
+                      height: 50,
+                      image: AssetImage('images/continuewithgoogle.png')),
                 ],
               ),
             ),

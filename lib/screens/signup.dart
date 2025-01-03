@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_print
 
 import 'package:flutter/material.dart';
 import 'package:hsmowers_app/screens/login.dart';
@@ -47,35 +47,61 @@ class _SignupState extends State<Signup> {
         password: password,
       );
 
+      // Send verification email
+      try {
+        await userCredential.user?.sendEmailVerification();
+      } catch (verificationError) {
+        print('Error sending verification email: $verificationError');
+        return 'Account created but failed to send verification email. Please try requesting it again after logging in.';
+      }
+
+      // Retrieve user info from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       String? userInfoString = prefs.getString('UserInfo_Shared_Perference');
 
       if (userInfoString != null) {
         Map<String, dynamic> userInfo = jsonDecode(userInfoString);
-
         userInfo['email'] = email;
         userInfo['createdAt'] = FieldValue.serverTimestamp();
         userInfo['uid'] = userCredential.user?.uid;
 
-        await FirebaseFirestore.instance
-            .collection('userInfo')
-            .doc(userCredential.user?.uid)
-            .set(userInfo);
+        try {
+          // Save user data to Firestore
+          await FirebaseFirestore.instance
+              .collection('userInfo')
+              .doc(userCredential.user?.uid)
+              .set(userInfo);
+          print('User data saved to Firestore successfully');
+        } catch (firestoreError) {
+          print('Error saving to Firestore: $firestoreError');
+          return 'Account created but failed to save user data. Please update your profile after logging in.';
+        }
 
-        print('User info saved to Firestore successfully');
+        try {
+          // Save user data back to SharedPreferences
+          await prefs.setString(
+              'UserInfo_Shared_Perference', jsonEncode(userInfo));
+          print('User data saved to SharedPreferences successfully');
+        } catch (prefsError) {
+          print('Error saving to SharedPreferences: $prefsError');
+        }
+
+        return 'A verification email has been sent to $email. Please verify your email to continue.';
+      } else {
+        return 'User info not found in SharedPreferences.';
       }
-
-      return 'Success';
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         return 'The password provided is too weak.';
       } else if (e.code == 'email-already-in-use') {
         return 'The account already exists for that email.';
       } else {
+        print('Firebase Auth Error: ${e.code} - ${e.message}');
         return e.message;
       }
     } catch (e) {
-      return e.toString();
+      print('Unexpected error during registration: $e');
+      return 'An unexpected error occurred. Please try again.';
     }
   }
 
@@ -85,36 +111,62 @@ class _SignupState extends State<Signup> {
     });
 
     final message = await registration(
-      email: _emailController.text,
-      password: _passwordController.text,
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
     );
 
     setState(() {
       _isLoading = false;
     });
 
-    if (message!.contains('Success')) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const Login()),
+    if (message!.contains('verification email')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 5),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      _showVerificationDialog();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     }
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor:
-            message.contains('Success') ? Colors.green : Colors.red,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        action: SnackBarAction(
-          label: 'Dismiss',
-          textColor: Colors.white,
-          onPressed: () {},
-        ),
-      ),
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Verify Your Email'),
+          content: Text(
+              'A verification email has been sent to ${_emailController.text}. Please verify your email and log in.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const Login()),
+                );
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 

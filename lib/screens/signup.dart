@@ -6,6 +6,7 @@ import 'package:hsmowers_app/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:convert';
 
 class Signup extends StatefulWidget {
@@ -19,6 +20,7 @@ class _SignupState extends State<Signup> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   Future<Map<String, dynamic>> getUserInfo() async {
     try {
@@ -47,7 +49,6 @@ class _SignupState extends State<Signup> {
         password: password,
       );
 
-      // Send verification email
       try {
         await userCredential.user?.sendEmailVerification();
       } catch (verificationError) {
@@ -55,7 +56,6 @@ class _SignupState extends State<Signup> {
         return 'Account created but failed to send verification email. Please try requesting it again after logging in.';
       }
 
-      // Retrieve user info from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       String? userInfoString = prefs.getString('UserInfo_Shared_Perference');
 
@@ -66,7 +66,6 @@ class _SignupState extends State<Signup> {
         userInfo['uid'] = userCredential.user?.uid;
 
         try {
-          // Save user data to Firestore
           await FirebaseFirestore.instance
               .collection('userInfo')
               .doc(userCredential.user?.uid)
@@ -78,7 +77,6 @@ class _SignupState extends State<Signup> {
         }
 
         try {
-          // Save user data back to SharedPreferences
           await prefs.setString(
               'UserInfo_Shared_Perference', jsonEncode(userInfo));
           print('User data saved to SharedPreferences successfully');
@@ -147,6 +145,48 @@ class _SignupState extends State<Signup> {
     }
   }
 
+  Future<String?> signUpWithGoogle() async {
+    try {
+      GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final prefs = await SharedPreferences.getInstance();
+      String? userInfoString = prefs.getString('UserInfo_Shared_Perference');
+
+      if (userInfoString != null) {
+        Map<String, dynamic> userInfo = jsonDecode(userInfoString);
+        userInfo['email'] = userCredential.user?.email;
+        userInfo['uid'] = userCredential.user?.uid;
+        userInfo['createdAt'] = FieldValue.serverTimestamp();
+
+        await FirebaseFirestore.instance
+            .collection('userInfo')
+            .doc(userCredential.user?.uid)
+            .set(userInfo);
+        print('User data saved to Firestore successfully');
+
+        await prefs.setString(
+            'UserInfo_Shared_Perference', jsonEncode(userInfo));
+        print('User data saved to SharedPreferences successfully');
+
+        return 'Successfully signed in with Google!';
+      } else {
+        return 'User info not found in SharedPreferences.';
+      }
+    } catch (e) {
+      print('Error during Google sign-in: $e');
+      return 'An error occurred during Google sign-in. Please try again.';
+    }
+  }
+
   void _showVerificationDialog() {
     showDialog(
       context: context,
@@ -173,109 +213,119 @@ class _SignupState extends State<Signup> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image(height: 80, image: AssetImage('images/hsmowerslogo.png')),
-              SizedBox(
-                height: 30,
-              ),
-              Text(
-                'Sign up',
-                style: AppTextStyles.h2,
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 30, right: 30),
-                child: TextFormField(
-                  cursorColor: AppColors.textColorLight,
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                      filled: true,
-                      hintText: 'Email',
-                      prefixIcon: Icon(
-                        Icons.email,
-                        color: AppColors.primary,
-                      ),
-                      fillColor: Colors.white,
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: AppColors.borderColor,
-                            width: 2,
-                          )),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                              color: AppColors.borderColor, width: 2))),
+      child: SingleChildScrollView(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image(height: 80, image: AssetImage('images/hsmowerslogo.png')),
+                SizedBox(
+                  height: 30,
                 ),
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 30, right: 30),
-                child: TextFormField(
-                  cursorColor: AppColors.textColorLight,
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                      filled: true,
-                      hintText: 'Password',
-                      prefixIcon: Icon(
-                        Icons.visibility,
-                        color: AppColors.primary,
-                      ),
-                      fillColor: Colors.white,
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: AppColors.borderColor,
-                            width: 2,
-                          )),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                              color: AppColors.borderColor, width: 2))),
+                Text(
+                  'Sign up',
+                  style: AppTextStyles.h2,
                 ),
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              InkWell(
-                onTap: _handleSignup, // Call the signup method
-                child: Padding(
+                SizedBox(
+                  height: 30,
+                ),
+                Padding(
                   padding: EdgeInsets.only(left: 30, right: 30),
-                  child: Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(24)),
-                    child: Center(
-                      child: _isLoading // Check loading state
-                          ? CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                          : Text(
-                              'Sign up',
-                              style: AppTextStyles.h4
-                                  .copyWith(color: Colors.white),
-                            ),
+                  child: TextFormField(
+                    cursorColor: AppColors.textColorLight,
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                        filled: true,
+                        hintText: 'Email',
+                        prefixIcon: Icon(
+                          Icons.email,
+                          color: AppColors.primary,
+                        ),
+                        fillColor: Colors.white,
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: AppColors.borderColor,
+                              width: 2,
+                            )),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                                color: AppColors.borderColor, width: 2))),
+                  ),
+                ),
+                SizedBox(
+                  height: 30,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 30, right: 30),
+                  child: TextFormField(
+                    cursorColor: AppColors.textColorLight,
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                        filled: true,
+                        hintText: 'Password',
+                        prefixIcon: Icon(
+                          Icons.visibility,
+                          color: AppColors.primary,
+                        ),
+                        fillColor: Colors.white,
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: AppColors.borderColor,
+                              width: 2,
+                            )),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                                color: AppColors.borderColor, width: 2))),
+                  ),
+                ),
+                SizedBox(
+                  height: 30,
+                ),
+                InkWell(
+                  onTap: _handleSignup,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 30, right: 30),
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(24)),
+                      child: Center(
+                        child: _isLoading // Check loading state
+                            ? CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : Text(
+                                'Sign up',
+                                style: AppTextStyles.h4
+                                    .copyWith(color: Colors.white),
+                              ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Text('Signup using', style: AppTextStyles.h6),
-              Image(height: 50, image: AssetImage('images/google.jpg'))
-            ],
+                SizedBox(
+                  height: 20,
+                ),
+                // Text('Signup using', style: AppTextStyles.h6),
+                // InkWell(
+                //   onTap: signUpWithGoogle,
+                //   child: SizedBox(
+                //     height: 50,
+                //     width: double.infinity,
+                //     child: Image.asset('images/continuewithgoogle.png'),
+                //   ),
+                // )
+              ],
+            ),
           ),
         ),
       ),

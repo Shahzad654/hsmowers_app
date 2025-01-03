@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:hsmowers_app/screens/home.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/theme.dart';
 
@@ -15,17 +16,17 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   @override
-  void initState(){
+  void initState() {
     super.initState();
     redirectToLogin();
   }
 
-  void redirectToLogin(){
-    Timer.periodic(Duration(seconds: 4), (timer){
-      Navigator.push(context, MaterialPageRoute(builder: (context)=> Login()));
+  void redirectToLogin() {
+    Timer.periodic(Duration(seconds: 4), (timer) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => HomeScreen()));
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +36,15 @@ class _SplashScreenState extends State<SplashScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-
-          Center(child: Image(
-            height: 200,
-            image: AssetImage('images/hsmowerslogo.png'))
-            ),
-            SizedBox(height: 25,),
-            Center(child: Text('HS Mowers', style: AppTextStyles.h2.copyWith(color: Colors.white)))
+          Center(
+              child: Image(
+                  height: 200, image: AssetImage('images/hsmowerslogo.png'))),
+          SizedBox(
+            height: 25,
+          ),
+          Center(
+              child: Text('HS Mowers',
+                  style: AppTextStyles.h2.copyWith(color: Colors.white)))
         ],
       ),
     );

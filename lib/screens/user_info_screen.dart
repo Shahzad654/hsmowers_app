@@ -351,7 +351,7 @@ class _Step2WidgetState extends State<Step2Widget> {
   late double distance;
 
   final List<String> availableServices = [
-    'Mowers',
+    'Mowing',
     'Weeding',
     'Snow Removal',
     'Baby Sitting',
@@ -382,7 +382,9 @@ class _Step2WidgetState extends State<Step2Widget> {
           spacing: 8,
           runSpacing: 8,
           children: availableServices.map((service) {
-            final isSelected = selectedServices.contains(service);
+            String formattedService =
+                service.toLowerCase().replaceAll(' ', '-');
+            final isSelected = selectedServices.contains(formattedService);
             return FilterChip(
               selectedColor: AppColors.primary,
               label: Text(service),
@@ -390,9 +392,9 @@ class _Step2WidgetState extends State<Step2Widget> {
               onSelected: (selected) {
                 setState(() {
                   if (selected) {
-                    selectedServices.add(service);
+                    selectedServices.add(formattedService);
                   } else {
-                    selectedServices.remove(service);
+                    selectedServices.remove(formattedService);
                   }
                 });
                 widget.onServicesChanged(selectedServices);
@@ -515,10 +517,9 @@ class Step4Widget extends StatelessWidget {
           label: 'Zip Code or Address',
           keyboardType: TextInputType.text,
           validator: (value) {
-            if (value?.isEmpty ?? true)
-              return 'Please enter zip code or address';
+            if (value?.isEmpty ?? true) return 'Please enter zip code';
             if (value!.length != 5 || value == '')
-              return 'Please enter a valid zip code or address';
+              return 'Please enter a valid zip code';
             return null;
           },
         ),

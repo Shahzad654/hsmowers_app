@@ -264,11 +264,11 @@ class _LoginState extends State<Login> {
                       decoration: TextDecoration.underline,
                     ),
                   ),
-                  SizedBox(height: 20),
-                  Text('Login using', style: AppTextStyles.h6),
-                  Image(
-                      height: 50,
-                      image: AssetImage('images/continuewithgoogle.png')),
+                  // SizedBox(height: 20),
+                  // Text('Login using', style: AppTextStyles.h6),
+                  // Image(
+                  //     height: 50,
+                  //     image: AssetImage('images/continuewithgoogle.png')),
                 ],
               ),
             ),

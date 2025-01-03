@@ -358,49 +358,66 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: Material(
-          elevation: 10.0,
-          color: Colors.transparent,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(50.0),
-            topRight: Radius.circular(50.0),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2),
+                spreadRadius: 5,
+                blurRadius: 10,
+                offset: Offset(0, -2),
+              ),
+            ],
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30.0),
+              topRight: Radius.circular(30.0),
+            ),
           ),
-          child: BottomNavigationBar(items: [
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.home,
-                color: AppColors.primary,
+          child: BottomNavigationBar(
+            backgroundColor: Colors.white,
+            elevation: 10.0,
+            selectedItemColor: AppColors.primary,
+            unselectedItemColor: Colors.grey,
+            type: BottomNavigationBarType.fixed,
+            iconSize: 30.0,
+            onTap: (index) {
+              setState(() {});
+              if (index == 0) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
+              } else if (index == 1) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => PricingScreen()),
+                );
+              } else if (index == 2) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => Login()),
+                );
+              }
+            },
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+                tooltip: 'Home',
               ),
-              label: 'Home',
-              tooltip: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => PricingScreen()),
-                  );
-                },
-                child: Icon(Icons.subscriptions_outlined),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.subscriptions_rounded),
+                label: 'Pricing',
+                tooltip: 'Pricing',
               ),
-              label: 'Pricing',
-              tooltip: 'Pricing',
-            ),
-            BottomNavigationBarItem(
-              icon: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Login()),
-                  );
-                },
-                child: Icon(Icons.login),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.login),
+                label: 'Login',
+                tooltip: 'Login',
               ),
-              label: 'Login',
-              tooltip: 'Login',
-            ),
-          ]),
+            ],
+          ),
         ),
       ),
     );

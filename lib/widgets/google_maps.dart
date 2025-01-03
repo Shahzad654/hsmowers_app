@@ -22,8 +22,8 @@ class _GoogleMapsState extends State<GoogleMaps> {
   Completer<GoogleMapController> _controller = Completer();
 
   List<Marker> _marker = [];
-  Set<Polygon> _polygons = <Polygon>{};
-  List<LatLng> _polygonPoints = [];
+  Set<Polyline> _polylines = <Polyline>{};
+  List<LatLng> _polylinePoints = [];
 
   late double _latitude;
   late double _longitude;
@@ -56,32 +56,26 @@ class _GoogleMapsState extends State<GoogleMaps> {
 
   void _onTap(LatLng point) {
     setState(() {
-      _polygonPoints.add(point);
+      _polylinePoints.add(point);
 
-      _polygons.add(
-        Polygon(
-          polygonId: PolygonId('polygon_1'),
-          points: _polygonPoints,
-          strokeColor: Colors.red,
-          strokeWidth: 2,
-          fillColor: Colors.red.withOpacity(0.3),
+      _polylines.add(
+        Polyline(
+          polylineId: PolylineId('polyline_1'),
+          points: _polylinePoints,
+          color: Colors.red,
+          width: 3,
         ),
       );
     });
   }
 
   void _finishDrawing() async {
-    if (_polygonPoints.isNotEmpty) {
-      print('Final Polygon Coordinates:');
-      for (var point in _polygonPoints) {
-        print("Lat: ${point.latitude}, Lng: ${point.longitude}");
-      }
-
+    if (_polylinePoints.isNotEmpty) {
       List<Map<String, double>> polygonCoordinates =
-          _polygonPoints.map((point) {
+          _polylinePoints.map((point) {
         return {
-          'latitude': point.latitude,
-          'longitude': point.longitude,
+          'lat': point.latitude,
+          'lng': point.longitude,
         };
       }).toList();
 
@@ -94,8 +88,12 @@ class _GoogleMapsState extends State<GoogleMaps> {
               .collection('userInfo')
               .doc(uid)
               .update({
-            'serviceArea': polygonCoordinates,
+            'serviceArea': {
+              'path': polygonCoordinates,
+            },
           });
+          String polygonCoordinatesString = jsonEncode(polygonCoordinates);
+          await prefs.setString('serviceArea', polygonCoordinatesString);
 
           print('Polygon saved to Firestore successfully.');
           Navigator.pushReplacement(
@@ -106,8 +104,6 @@ class _GoogleMapsState extends State<GoogleMaps> {
       } catch (e) {
         print('Error saving polygon: $e');
       }
-
-      setState(() {});
     }
   }
 
@@ -147,7 +143,7 @@ class _GoogleMapsState extends State<GoogleMaps> {
                   infoWindow: InfoWindow(title: "Your Location"),
                 ),
               },
-              polygons: _polygons,
+              polylines: _polylines,
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
               },

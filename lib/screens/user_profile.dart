@@ -173,7 +173,10 @@ class _UserProfileState extends State<UserProfile> {
             ],
           ),
           body: isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                ))
               : SingleChildScrollView(
                   child: Column(
                     children: [
@@ -278,206 +281,34 @@ class _UserProfileState extends State<UserProfile> {
                       SizedBox(
                         height: 20,
                       ),
-                      Center(
-                        child: Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 15,
-                            runSpacing: 15,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  if (services != null &&
-                                          services!.contains('Weeding') ||
-                                      services!.contains('weeding'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(weedingIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Weeding')
-                                      ],
-                                    ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (services != null &&
-                                          services!.contains('Mowers') ||
-                                      services!.contains('mowing'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(mowersIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Mowing')
-                                      ],
-                                    ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (services != null &&
-                                          services!.contains('Snow Removal') ||
-                                      services!.contains('snow-removal'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(
-                                              snowremovalIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Snow Removal')
-                                      ],
-                                    ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (services != null &&
-                                          services!.contains('Baby Sitting') ||
-                                      services!.contains('baby-sitting'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(
-                                              babysittingIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Baby Sitting')
-                                      ],
-                                    ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (services != null &&
-                                          services!.contains('Edging') ||
-                                      services!.contains('edging'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(egdingIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Edging')
-                                      ],
-                                    ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (services != null &&
-                                          services!.contains('Leaf Removal') ||
-                                      services!.contains('leaf-removal'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(
-                                              leafremovalIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Leaf Removal')
-                                      ],
-                                    ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (services != null &&
-                                          services!.contains('Dog Walking') ||
-                                      services!.contains('dog-walking'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(
-                                              dogwalkingIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Dog Walking')
-                                      ],
-                                    ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (services != null &&
-                                          services!
-                                              .contains('Window Cleaning') ||
-                                      services!.contains('window-cleaning'))
-                                    Column(
-                                      children: [
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: AppColors.primary),
-                                          child: SvgPicture.asset(
-                                              windowcleaningIcon,
-                                              semanticsLabel: 'Dart Logo',
-                                              width: 40,
-                                              height: 40),
-                                        ),
-                                        Text('Window Cleaning')
-                                      ],
-                                    ),
-                                ],
-                              ),
-                            ]),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 15,
+                        runSpacing: 15,
+                        children: [
+                          if (services != null && services!.contains('weeding'))
+                            buildServiceIcon(weedingIcon, 'Weeding'),
+                          if (services != null && services!.contains('mowing'))
+                            buildServiceIcon(mowersIcon, 'Mowing'),
+                          if (services != null && services!.contains('edging'))
+                            buildServiceIcon(egdingIcon, 'Edging'),
+                          if (services != null &&
+                              services!.contains('window-cleaning'))
+                            buildServiceIcon(
+                                windowcleaningIcon, 'Window Cleaning'),
+                          if (services != null &&
+                              services!.contains('snow-removal'))
+                            buildServiceIcon(snowremovalIcon, 'Snow Removal'),
+                          if (services != null &&
+                              services!.contains('baby-sitting'))
+                            buildServiceIcon(babysittingIcon, 'Baby Sitting'),
+                          if (services != null &&
+                              services!.contains('leaf-removal'))
+                            buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
+                          if (services != null &&
+                              services!.contains('dog-walking'))
+                            buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
+                        ],
                       ),
                     ],
                   ),
@@ -489,36 +320,62 @@ class _UserProfileState extends State<UserProfile> {
               topLeft: Radius.circular(50.0),
               topRight: Radius.circular(50.0),
             ),
-            child: BottomNavigationBar(items: [
-              BottomNavigationBarItem(
-                icon: InkWell(
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()));
-                  },
-                  child: Icon(
-                    Icons.home,
-                    color: AppColors.primary,
-                  ),
+            child: BottomNavigationBar(
+              backgroundColor: Colors.white,
+              elevation: 10.0,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: Colors.grey,
+              type: BottomNavigationBarType.fixed,
+              iconSize: 30.0,
+              onTap: (index) {
+                setState(() {});
+                if (index == 0) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                } else if (index == 1) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => PricingScreen()),
+                  );
+                }
+              },
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                  tooltip: 'Home',
                 ),
-                label: 'Home',
-                tooltip: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => PricingScreen()));
-                  },
-                  child: Icon(Icons.subscriptions_outlined),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.subscriptions_outlined),
+                  label: 'Subscription',
+                  tooltip: 'Subscription',
                 ),
-                label: 'Subscription',
-                tooltip: 'Subscription',
-              ),
-            ]),
+              ],
+            ),
           )),
     );
   }
+}
+
+Widget buildServiceIcon(String iconPath, String label) {
+  return Column(
+    children: [
+      Container(
+        height: 50,
+        width: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(50),
+          color: AppColors.primary,
+        ),
+        child: SvgPicture.asset(
+          iconPath,
+          width: 40,
+          height: 40,
+        ),
+      ),
+      Text(label),
+    ],
+  );
 }

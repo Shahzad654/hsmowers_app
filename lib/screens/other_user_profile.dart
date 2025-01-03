@@ -172,241 +172,46 @@ class _OtherUsersState extends State<OtherUsers> {
                           style: AppTextStyles.h3.copyWith(color: Colors.black),
                         ),
                         SizedBox(height: 20),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 15,
+                          runSpacing: 15,
                           children: [
-                            Center(
-                              child: Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 15,
-                                runSpacing: 15,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Weeding') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('weeding'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                weedingIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Weeding')
-                                          ],
-                                        ),
-                                      SizedBox(width: 15),
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Mowers') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('mowing'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                mowersIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Mowers')
-                                          ],
-                                        ),
-                                      SizedBox(width: 15),
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Edging') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('edging'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                edgingIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Edging')
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Window Cleaning') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('window-cleaning'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                windowcleaningIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Window Cleaning')
-                                          ],
-                                        ),
-                                      SizedBox(width: 15),
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Snow Removal') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('snow-removal'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                snowremovalIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Snow Removal')
-                                          ],
-                                        ),
-                                      SizedBox(width: 15),
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Baby Sitting') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('baby-sitting'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                babysittingIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Baby Sitting')
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Leaf Removal') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('leaf-removal'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                leafremovalIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Leaf Removal')
-                                          ],
-                                        ),
-                                      SizedBox(width: 15),
-                                      if (userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('Dog Walking') ||
-                                          userData!['services']
-                                              .map((service) => service.trim())
-                                              .contains('dog-walking'))
-                                        Column(
-                                          children: [
-                                            Container(
-                                              height: 50,
-                                              width: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color: AppColors.primary,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                dogwalkingIcon,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                            ),
-                                            Text('Dog Walking')
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('weeding'))
+                              buildServiceIcon(weedingIcon, 'Weeding'),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('mowing'))
+                              buildServiceIcon(mowersIcon, 'Mowing'),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('edging'))
+                              buildServiceIcon(edgingIcon, 'Edging'),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('window-cleaning'))
+                              buildServiceIcon(
+                                  windowcleaningIcon, 'Window Cleaning'),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('snow-removal'))
+                              buildServiceIcon(snowremovalIcon, 'Snow Removal'),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('baby-sitting'))
+                              buildServiceIcon(babysittingIcon, 'Baby Sitting'),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('leaf-removal'))
+                              buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
+                            if (userData!['services']
+                                .map((service) => service.trim().toLowerCase())
+                                .contains('dog-walking'))
+                              buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   )
@@ -419,4 +224,25 @@ class _OtherUsersState extends State<OtherUsers> {
       ),
     );
   }
+}
+
+Widget buildServiceIcon(String iconPath, String label) {
+  return Column(
+    children: [
+      Container(
+        height: 50,
+        width: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(50),
+          color: AppColors.primary,
+        ),
+        child: SvgPicture.asset(
+          iconPath,
+          width: 40,
+          height: 40,
+        ),
+      ),
+      Text(label),
+    ],
+  );
 }

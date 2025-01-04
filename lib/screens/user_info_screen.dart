@@ -452,6 +452,13 @@ class Step3Widget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, String> gradeMap = {
+      '9': 'Freshman',
+      '10': 'Sophomore',
+      '11': 'Junior',
+      '12': 'Senior',
+    };
+
     return Column(
       children: [
         GestureDetector(
@@ -483,9 +490,11 @@ class Step3Widget extends StatelessWidget {
               borderSide: BorderSide(color: AppColors.primary, width: 2.0),
             ),
           ),
-          items: ['Freshman', 'Sophomore', 'Junior', 'Senior']
-              .map(
-                  (grade) => DropdownMenuItem(value: grade, child: Text(grade)))
+          items: gradeMap.entries
+              .map((entry) => DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Text(entry.value),
+                  ))
               .toList(),
           onChanged: onGradeChanged,
         ),

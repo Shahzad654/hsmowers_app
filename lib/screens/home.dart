@@ -360,7 +360,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                        userData[index]['grade'] ?? 'No Grade'),
+                                      {
+                                            '9': 'Freshman',
+                                            '10': 'Sophomore',
+                                            '11': 'Junior',
+                                            '12': 'Senior',
+                                          }[userData[index]['grade']] ??
+                                          'No Grade',
+                                    ),
                                     SizedBox(height: 4),
                                     Text(
                                       userData[index]['services']?.join(', ') ??

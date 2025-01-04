@@ -225,7 +225,13 @@ class _UserProfileState extends State<UserProfile> {
                       ),
                       Center(
                         child: Text(
-                          grade ?? 'no grade',
+                          {
+                                '9': 'Freshman',
+                                '10': 'Sophomore',
+                                '11': 'Junior',
+                                '12': 'Senior',
+                              }[grade] ??
+                              'No Grade',
                           style: AppTextStyles.h6.copyWith(color: Colors.black),
                         ),
                       ),

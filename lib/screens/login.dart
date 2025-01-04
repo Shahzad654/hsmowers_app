@@ -47,11 +47,14 @@ class _LoginState extends State<Login> {
 
     await prefs.setString('userName', userData['userName'] ?? '');
     await prefs.setString('email', userData['email'] ?? '');
+    await prefs.setString('phoneNum', userData['phoneNumber'] ?? '');
     await prefs.setString('photoURL', userData['photoURL'] ?? '');
     await prefs.setString('uid', userData['uid'] ?? '');
     await prefs.setString('displayName', userData['displayName'] ?? '');
+    await prefs.setString('schoolName', userData['schoolName'] ?? '');
     await prefs.setString('grade', userData['grade'] ?? '');
     await prefs.setString('description', userData['description'] ?? '');
+    await prefs.setString('zipCode', userData['zipCode'] ?? '');
 
     // if (userData['serviceArea'] != null && userData['serviceArea'] is List) {
     //   String serviceAreaJson = jsonEncode(userData['serviceArea']);

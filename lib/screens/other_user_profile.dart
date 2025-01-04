@@ -123,7 +123,13 @@ class _OtherUsersState extends State<OtherUsers> {
                         SizedBox(height: 10),
                         Center(
                           child: Text(
-                            userData!['grade'] ?? '',
+                            {
+                                  '9': 'Freshman',
+                                  '10': 'Sophomore',
+                                  '11': 'Junior',
+                                  '12': 'Senior',
+                                }[userData!['grade']] ??
+                                '',
                             style:
                                 AppTextStyles.h6.copyWith(color: Colors.black),
                           ),

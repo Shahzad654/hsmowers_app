@@ -71,11 +71,24 @@ class _UserProfileState extends State<UserProfile> {
     String? storedSchoolname = prefs.getString('schoolName');
     bool? storedAuth = prefs.getBool('isLoggedIn');
 
+    // List<dynamic>? decodedServiceArea;
+    // if (storedServiceArea != null) {
+    //   try {
+    //     decodedServiceArea = jsonDecode(storedServiceArea);
+    //     _generateStaticMapUrl(decodedServiceArea);
+    //   } catch (e) {
+    //     print("Error decoding serviceArea: $e");
+    //   }
+    // }
+
     List<dynamic>? decodedServiceArea;
     if (storedServiceArea != null) {
       try {
         decodedServiceArea = jsonDecode(storedServiceArea);
-        _generateStaticMapUrl(decodedServiceArea);
+
+        if (decodedServiceArea != null && decodedServiceArea.isNotEmpty) {
+          _generateStaticMapUrl(decodedServiceArea);
+        }
       } catch (e) {
         print("Error decoding serviceArea: $e");
       }
@@ -97,8 +110,15 @@ class _UserProfileState extends State<UserProfile> {
       description = storedDescription;
       grade = storedGrade;
       isAuth = storedAuth;
-      serviceArea = storedServiceArea;
-      serviceArea = decodedServiceArea?.join(', ') ?? 'No service area';
+      // serviceArea = storedServiceArea;
+      // serviceArea = decodedServiceArea?.join(', ') ?? 'No service area';
+      if (decodedServiceArea != null && decodedServiceArea.isNotEmpty) {
+        serviceArea = decodedServiceArea
+            .map((coord) => '${coord["lat"]}, ${coord["lng"]}')
+            .join('; ');
+      } else {
+        serviceArea = 'No service area';
+      }
       print(serviceArea);
       services = decodedServices?.join(', ') ?? 'No services';
       serviceDistance = stroedServiceDistance;

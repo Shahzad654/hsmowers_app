@@ -128,7 +128,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         backgroundImage: NetworkImage(photoURL!),
                       ),
                     )
-                  : SizedBox.shrink(),
+                  : ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => Login()));
+                      },
+                      child: Text(
+                        'Login',
+                        style: TextStyle(color: Colors.black),
+                      )),
             ),
           ],
         ),
@@ -196,80 +204,99 @@ class _HomeScreenState extends State<HomeScreen> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      return Material(
-                        color: Colors.transparent,
-                        child: AlertDialog(
-                          title: Text(
-                            'Consent Form',
-                            style:
-                                AppTextStyles.h4.copyWith(color: Colors.black),
-                          ),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                leading: Radio<int>(
-                                  value: 1,
-                                  groupValue: _selectedConsent,
-                                  onChanged: (int? value) {
-                                    setState(() {
-                                      _selectedConsent = value;
-                                    });
-                                  },
-                                ),
-                                title: Text(
-                                    'Yes, I am over 13 years old and I am currently enrolled in High School'),
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          return Material(
+                            color: Colors.transparent,
+                            child: AlertDialog(
+                              title: Row(
+                                children: [
+                                  Text(
+                                    'Consent Form',
+                                    style: AppTextStyles.h4
+                                        .copyWith(color: Colors.black),
+                                  ),
+                                  SizedBox(
+                                    width: 60,
+                                  ),
+                                  InkWell(
+                                      onTap: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Icon(Icons.close)),
+                                ],
                               ),
-                              ListTile(
-                                leading: Radio<int>(
-                                  value: 2,
-                                  groupValue: _selectedConsent,
-                                  onChanged: (int? value) {
-                                    setState(() {
-                                      _selectedConsent = value;
-                                    });
-                                  },
-                                ),
-                                title: Text('No, I am not over 13 years old'),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: Radio<int>(
+                                      value: 1,
+                                      groupValue: _selectedConsent,
+                                      onChanged: (int? value) {
+                                        setState(() {
+                                          _selectedConsent = value;
+                                        });
+                                        this.setState(() {});
+                                      },
+                                    ),
+                                    title: Text(
+                                        'Yes, I am over 13 years old and I am currently enrolled in High School'),
+                                  ),
+                                  ListTile(
+                                    leading: Radio<int>(
+                                      value: 2,
+                                      groupValue: _selectedConsent,
+                                      onChanged: (int? value) {
+                                        setState(() {
+                                          _selectedConsent = value;
+                                        });
+                                        this.setState(() {});
+                                      },
+                                    ),
+                                    title:
+                                        Text('No, I am not over 13 years old'),
+                                  ),
+                                  ListTile(
+                                    leading: Radio<int>(
+                                      value: 3,
+                                      groupValue: _selectedConsent,
+                                      onChanged: (int? value) {
+                                        setState(() {
+                                          _selectedConsent = value;
+                                        });
+                                        this.setState(() {});
+                                      },
+                                    ),
+                                    title: Text(
+                                        'No, I am not currently enrolled in High School.'),
+                                  ),
+                                  SizedBox(height: 10),
+                                  ElevatedButton(
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            WidgetStateProperty.all(
+                                                AppColors.primaryDark)),
+                                    onPressed: _handleSubmit,
+                                    child: Text(
+                                      'Submit',
+                                      style: AppTextStyles.h5
+                                          .copyWith(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              ListTile(
-                                leading: Radio<int>(
-                                  value: 3,
-                                  groupValue: _selectedConsent,
-                                  onChanged: (int? value) {
-                                    setState(() {
-                                      _selectedConsent = value;
-                                    });
-                                  },
-                                ),
-                                title: Text(
-                                    'No, I am not currently enrolled in High School.'),
-                              ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              ElevatedButton(
-                                style: ButtonStyle(
-                                    backgroundColor: WidgetStateProperty.all(
-                                        AppColors.primaryDark)),
-                                onPressed: _handleSubmit,
-                                child: Text(
-                                  'Submit',
-                                  style: AppTextStyles.h5
-                                      .copyWith(color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: Text('Close'),
+                              // actions: [
+                              //   TextButton(
+                              //     onPressed: () {
+                              //       Navigator.of(context).pop();
+                              //     },
+                              //     child: Text('Close'),
+                              //   ),
+                              // ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
                   );
@@ -358,67 +385,67 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 5,
-                blurRadius: 10,
-                offset: Offset(0, -2),
-              ),
-            ],
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30.0),
-              topRight: Radius.circular(30.0),
-            ),
-          ),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            elevation: 10.0,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: Colors.grey,
-            type: BottomNavigationBarType.fixed,
-            iconSize: 30.0,
-            onTap: (index) {
-              setState(() {});
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
-                );
-              } else if (index == 1) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => PricingScreen()),
-                );
-              } else if (index == 2) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => Login()),
-                );
-              }
-            },
-            items: [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Home',
-                tooltip: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.subscriptions_rounded),
-                label: 'Pricing',
-                tooltip: 'Pricing',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.login),
-                label: 'Login',
-                tooltip: 'Login',
-              ),
-            ],
-          ),
-        ),
+        // bottomNavigationBar: Container(
+        //   decoration: BoxDecoration(
+        //     color: Colors.white,
+        //     boxShadow: [
+        //       BoxShadow(
+        //         color: Colors.grey.withOpacity(0.2),
+        //         spreadRadius: 5,
+        //         blurRadius: 10,
+        //         offset: Offset(0, -2),
+        //       ),
+        //     ],
+        //     borderRadius: BorderRadius.only(
+        //       topLeft: Radius.circular(30.0),
+        //       topRight: Radius.circular(30.0),
+        //     ),
+        //   ),
+        //   child: BottomNavigationBar(
+        //     backgroundColor: Colors.white,
+        //     elevation: 10.0,
+        //     selectedItemColor: AppColors.primary,
+        //     unselectedItemColor: Colors.grey,
+        //     type: BottomNavigationBarType.fixed,
+        //     iconSize: 30.0,
+        //     onTap: (index) {
+        //       setState(() {});
+        //       if (index == 0) {
+        //         Navigator.pushReplacement(
+        //           context,
+        //           MaterialPageRoute(builder: (context) => HomeScreen()),
+        //         );
+        //       } else if (index == 1) {
+        //         Navigator.pushReplacement(
+        //           context,
+        //           MaterialPageRoute(builder: (context) => PricingScreen()),
+        //         );
+        //       } else if (index == 2) {
+        //         Navigator.pushReplacement(
+        //           context,
+        //           MaterialPageRoute(builder: (context) => Login()),
+        //         );
+        //       }
+        //     },
+        //     items: [
+        //       BottomNavigationBarItem(
+        //         icon: Icon(Icons.home),
+        //         label: 'Home',
+        //         tooltip: 'Home',
+        //       ),
+        //       BottomNavigationBarItem(
+        //         icon: Icon(Icons.subscriptions_rounded),
+        //         label: 'Pricing',
+        //         tooltip: 'Pricing',
+        //       ),
+        //       BottomNavigationBarItem(
+        //         icon: Icon(Icons.login),
+        //         label: 'Login',
+        //         tooltip: 'Login',
+        //       ),
+        //     ],
+        //   ),
+        // ),
       ),
     );
   }

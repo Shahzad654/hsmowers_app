@@ -213,119 +213,121 @@ class _SignupState extends State<Signup> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image(height: 80, image: AssetImage('images/hsmowerslogo.png')),
-                SizedBox(
-                  height: 30,
-                ),
-                Text(
-                  'Sign up',
-                  style: AppTextStyles.h2,
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                Padding(
-                  padding: EdgeInsets.only(left: 30, right: 30),
-                  child: TextFormField(
-                    cursorColor: AppColors.textColorLight,
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                        filled: true,
-                        hintText: 'Email',
-                        prefixIcon: Icon(
-                          Icons.email,
-                          color: AppColors.primary,
-                        ),
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: AppColors.borderColor,
-                              width: 2,
-                            )),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                                color: AppColors.borderColor, width: 2))),
-                  ),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                Padding(
-                  padding: EdgeInsets.only(left: 30, right: 30),
-                  child: TextFormField(
-                    cursorColor: AppColors.textColorLight,
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                        filled: true,
-                        hintText: 'Password',
-                        prefixIcon: Icon(
-                          Icons.visibility,
-                          color: AppColors.primary,
-                        ),
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: AppColors.borderColor,
-                              width: 2,
-                            )),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                                color: AppColors.borderColor, width: 2))),
-                  ),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                InkWell(
-                  onTap: _handleSignup,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 30, right: 30),
-                    child: Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(24)),
-                      child: Center(
-                        child: _isLoading // Check loading state
-                            ? CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : Text(
-                                'Sign up',
-                                style: AppTextStyles.h4
-                                    .copyWith(color: Colors.white),
-                              ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image(height: 80, image: AssetImage('images/hsmowerslogo.png')),
+              SizedBox(
+                height: 30,
+              ),
+              Text(
+                'Sign up',
+                style: AppTextStyles.h2,
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 30, right: 30),
+                child: TextFormField(
+                  cursorColor: AppColors.textColorLight,
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                      filled: true,
+                      hintText: 'Email',
+                      prefixIcon: Icon(
+                        Icons.email,
+                        color: AppColors.primary,
                       ),
+                      fillColor: Colors.white,
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: AppColors.borderColor,
+                            width: 2,
+                          )),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                              color: AppColors.borderColor, width: 2))),
+                ),
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 30, right: 30),
+                child: TextFormField(
+                  cursorColor: AppColors.textColorLight,
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                      filled: true,
+                      hintText: 'Password',
+                      prefixIcon: Icon(
+                        Icons.visibility,
+                        color: AppColors.primary,
+                      ),
+                      fillColor: Colors.white,
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: AppColors.borderColor,
+                            width: 2,
+                          )),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                              color: AppColors.borderColor, width: 2))),
+                ),
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              InkWell(
+                onTap: _handleSignup,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 30, right: 30),
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(24)),
+                    child: Center(
+                      child: _isLoading // Check loading state
+                          ? SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Sign up',
+                              style: AppTextStyles.h4
+                                  .copyWith(color: Colors.white),
+                            ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 20,
-                ),
-                // Text('Signup using', style: AppTextStyles.h6),
-                // InkWell(
-                //   onTap: signUpWithGoogle,
-                //   child: SizedBox(
-                //     height: 50,
-                //     width: double.infinity,
-                //     child: Image.asset('images/continuewithgoogle.png'),
-                //   ),
-                // )
-              ],
-            ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              // Text('Signup using', style: AppTextStyles.h6),
+              // InkWell(
+              //   onTap: signUpWithGoogle,
+              //   child: SizedBox(
+              //     height: 50,
+              //     width: double.infinity,
+              //     child: Image.asset('images/continuewithgoogle.png'),
+              //   ),
+              // )
+            ],
           ),
         ),
       ),

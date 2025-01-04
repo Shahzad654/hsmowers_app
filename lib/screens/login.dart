@@ -53,9 +53,19 @@ class _LoginState extends State<Login> {
     await prefs.setString('grade', userData['grade'] ?? '');
     await prefs.setString('description', userData['description'] ?? '');
 
-    if (userData['serviceArea'] != null && userData['serviceArea'] is List) {
-      String serviceAreaJson = jsonEncode(userData['serviceArea']);
-      await prefs.setString('serviceArea', serviceAreaJson);
+    // if (userData['serviceArea'] != null && userData['serviceArea'] is List) {
+    //   String serviceAreaJson = jsonEncode(userData['serviceArea']);
+    //   await prefs.setString('serviceArea', serviceAreaJson);
+    // }
+
+    if (userData['serviceArea'] != null) {
+      if (userData['serviceArea']['path'] != null) {
+        await prefs.setString(
+            'serviceArea', jsonEncode(userData['serviceArea']['path']));
+      } else {
+        await prefs.setString(
+            'serviceArea', jsonEncode(userData['serviceArea']));
+      }
     }
 
     if (userData['services'] != null && userData['services'] is List) {
@@ -88,25 +98,33 @@ class _LoginState extends State<Login> {
 
       if (userSnapshot.exists) {
         var userData = userSnapshot.data() as Map<String, dynamic>;
+        print(userData);
         await storeUserDataInPreferences(userData);
+        print(userData['serviceArea']);
 
         if (userData['serviceArea'] != null &&
-            userData['serviceArea'] is List &&
-            userData['serviceArea'].isNotEmpty) {
+            userData['serviceArea'] is Map &&
+            userData['serviceArea']['path'] != null &&
+            userData['serviceArea']['path'] is List &&
+            (userData['serviceArea']['path'] as List).isNotEmpty) {
+          print('Going to user profile');
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const UserProfile(),
             ),
           );
+          return 'Success';
         } else {
+          print('Going to maps');
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const GoogleMaps(),
             ),
           );
+          return 'Success-maps';
         }
 
-        return 'Success';
+        // return 'Success';
       } else {
         return 'User data not found.';
       }
@@ -206,8 +224,9 @@ class _LoginState extends State<Login> {
                           email: _emailController.text.trim(),
                           password: _passwordController.text.trim(),
                         );
+                        if (!mounted) return;
 
-                        if (message == 'Success') {
+                        if (message == 'Success-maps') {
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (context) => const GoogleMaps(),
@@ -245,8 +264,12 @@ class _LoginState extends State<Login> {
                         ),
                         child: Center(
                           child: _isLoading
-                              ? CircularProgressIndicator(
-                                  color: Colors.white,
+                              ? SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
                                 )
                               : Text(
                                   'Login',

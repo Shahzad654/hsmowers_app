@@ -106,8 +106,11 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
       if (imageFile != null) {
         try {
-          String fileName =
-              'profilePics/${DateTime.now().millisecondsSinceEpoch}.jpg';
+          // String fileName =
+          //     'profilePics/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+          String fileName = 'profilePics/${userNameController.text}.jpg';
+
           TaskSnapshot uploadTask =
               await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
 

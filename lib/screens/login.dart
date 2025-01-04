@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_constructors, use_build_context_synchronously
 
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/widgets/google_maps.dart';
@@ -20,6 +20,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _resetEmailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
@@ -55,11 +56,6 @@ class _LoginState extends State<Login> {
     await prefs.setString('grade', userData['grade'] ?? '');
     await prefs.setString('description', userData['description'] ?? '');
     await prefs.setString('zipCode', userData['zipCode'] ?? '');
-
-    // if (userData['serviceArea'] != null && userData['serviceArea'] is List) {
-    //   String serviceAreaJson = jsonEncode(userData['serviceArea']);
-    //   await prefs.setString('serviceArea', serviceAreaJson);
-    // }
 
     if (userData['serviceArea'] != null) {
       if (userData['serviceArea']['path'] != null) {
@@ -101,24 +97,20 @@ class _LoginState extends State<Login> {
 
       if (userSnapshot.exists) {
         var userData = userSnapshot.data() as Map<String, dynamic>;
-        print(userData);
         await storeUserDataInPreferences(userData);
-        print(userData['serviceArea']);
 
         if (userData['serviceArea'] != null &&
             userData['serviceArea'] is Map &&
             userData['serviceArea']['path'] != null &&
             userData['serviceArea']['path'] is List &&
             (userData['serviceArea']['path'] as List).isNotEmpty) {
-          print('Going to user profile');
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const UserProfile(),
             ),
           );
-          return 'Success';
+          return 'Successfully LoggedIn';
         } else {
-          print('Going to maps');
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const GoogleMaps(),
@@ -126,25 +118,58 @@ class _LoginState extends State<Login> {
           );
           return 'Success-maps';
         }
-
-        // return 'Success';
       } else {
-        return 'User data not found.';
+        return 'Account not found. Please check your credentials.';
       }
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        return 'No user found for that email.';
-      } else if (e.code == 'wrong-password') {
-        return 'Wrong password provided for that user.';
-      } else {
-        return e.message ?? 'An unknown error occurred.';
-      }
+      return _getReadableErrorMessage(e.code);
     } catch (e) {
-      return 'An error occurred. Please try again.';
+      return 'Unable to sign in. Please try again later.';
     } finally {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  String _getReadableErrorMessage(String errorCode) {
+    switch (errorCode) {
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-email':
+        return 'Invalid email or password.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many failed attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection.';
+      case 'email-already-in-use':
+        return 'An account already exists with this email.';
+      default:
+        return 'Unable to sign in. Please try again later.';
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final String email = _resetEmailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter your email address')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password reset email sent!')),
+      );
+      Navigator.of(context).pop();
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.message}')),
+      );
     }
   }
 
@@ -239,11 +264,14 @@ class _LoginState extends State<Login> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(message!),
-                              backgroundColor: message.contains('Success')
-                                  ? Colors.green
-                                  : Colors.red,
+                              backgroundColor:
+                                  message.contains('Successfully LoggedIn')
+                                      ? Colors.green
+                                      : Colors.red,
                               duration: const Duration(seconds: 3),
                               behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.only(
+                                  top: 10, left: 10, right: 10),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -284,17 +312,44 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Forget Password?',
-                    style: AppTextStyles.h5.copyWith(
-                      decoration: TextDecoration.underline,
+                  TextButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('Reset Password'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              buildInputField(
+                                controller: _resetEmailController,
+                                hintText: 'Enter your email',
+                                icon: Icons.email,
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: _resetPassword,
+                              child: Text('Send Reset Link'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Forgot Password?',
+                      style: AppTextStyles.h5.copyWith(
+                        decoration: TextDecoration.underline,
+                      ),
                     ),
                   ),
-                  // SizedBox(height: 20),
-                  // Text('Login using', style: AppTextStyles.h6),
-                  // Image(
-                  //     height: 50,
-                  //     image: AssetImage('images/continuewithgoogle.png')),
                 ],
               ),
             ),

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hsmowers_app/screens/contact_users.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -154,7 +155,12 @@ class _OtherUsersState extends State<OtherUsers> {
                               style: ButtonStyle(
                                   backgroundColor: WidgetStateProperty.all(
                                       AppColors.primaryDark)),
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ContactUsers()));
+                              },
                               child: Text(
                                 'Contact',
                                 style: AppTextStyles.h5

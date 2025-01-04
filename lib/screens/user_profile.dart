@@ -256,19 +256,19 @@ class _UserProfileState extends State<UserProfile> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          ElevatedButton(
-                              style: ButtonStyle(
-                                  backgroundColor: WidgetStateProperty.all(
-                                      AppColors.primaryDark)),
-                              onPressed: () {},
-                              child: Text(
-                                'Contact',
-                                style: AppTextStyles.h5
-                                    .copyWith(color: Colors.white),
-                              )),
-                          SizedBox(
-                            width: 20,
-                          ),
+                          // ElevatedButton(
+                          //     style: ButtonStyle(
+                          //         backgroundColor: WidgetStateProperty.all(
+                          //             AppColors.primaryDark)),
+                          //     onPressed: () {},
+                          //     child: Text(
+                          //       'Contact',
+                          //       style: AppTextStyles.h5
+                          //           .copyWith(color: Colors.white),
+                          //     )),
+                          // SizedBox(
+                          //   width: 20,
+                          // ),
                           ElevatedButton(
                               style: ButtonStyle(
                                   backgroundColor: WidgetStateProperty.all(

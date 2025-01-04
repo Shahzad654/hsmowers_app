@@ -150,11 +150,10 @@ class _EditProfileState extends State<EditProfile> {
     });
   }
 
-  void submitForm(BuildContext context, WidgetRef ref) async {
+  Future<void> submitForm(BuildContext context, WidgetRef ref) async {
     if (!_formKey.currentState!.validate()) return;
 
     final addressCode = addressCodeController.text.trim();
-
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('uid');
 
@@ -167,7 +166,6 @@ class _EditProfileState extends State<EditProfile> {
 
     try {
       Map<String, double> latLong = await convertZipToLatLong(addressCode);
-
       String imageUrl = '';
 
       if (profileImage != null) {
@@ -178,7 +176,6 @@ class _EditProfileState extends State<EditProfile> {
           final metadata = SettableMetadata(
               contentType: 'image/jpeg', customMetadata: {'userId': userId});
           await storageRef.putFile(profileImage!, metadata);
-
           imageUrl = await storageRef.getDownloadURL();
         } catch (e) {
           print('Error uploading image: $e');
@@ -198,7 +195,7 @@ class _EditProfileState extends State<EditProfile> {
         'schoolName': schoolNameController.text,
         'grade': selectedGrade,
         'description': descriptionController.text,
-        'address': addressCode,
+        'zipCode': addressCode,
         'latitude': latLong['latitude'],
         'longitude': latLong['longitude'],
         'updatedAt': FieldValue.serverTimestamp(),
@@ -208,39 +205,29 @@ class _EditProfileState extends State<EditProfile> {
         userData['photoURL'] = imageUrl;
       }
 
-      // Update the user data in Firestore
       await FirebaseFirestore.instance
           .collection('userInfo')
           .doc(userId)
           .set(userData, SetOptions(merge: true));
 
-      // Update user data in SharedPreferences
-      final existingUserData = prefs.getString('UserInfo_Shared_Preference');
-      if (existingUserData != null) {
-        Map<String, dynamic> existingData = jsonDecode(existingUserData);
+      await prefs.setString('displayName', fullNameController.text);
+      await prefs.setString('userName', userNameController.text);
+      await prefs.setString('phoneNum', phoneNumController.text);
+      await prefs.setString('schoolName', schoolNameController.text);
+      await prefs.setString('grade', selectedGrade ?? '');
+      await prefs.setString('description', descriptionController.text);
+      await prefs.setString('zipCode', addressCode);
 
-        // Update only the changed fields
-        existingData['displayName'] = fullNameController.text;
-        existingData['userName'] = userNameController.text;
-        existingData['phoneNumber'] = phoneNumController.text;
-        existingData['services'] = selectedServices;
-        existingData['serviceDistance'] = serviceDistance;
-        existingData['schoolName'] = schoolNameController.text;
-        existingData['grade'] = selectedGrade;
-        existingData['description'] = descriptionController.text;
-        existingData['address'] = addressCode;
-        existingData['latitude'] = latLong['latitude'];
-        existingData['longitude'] = latLong['longitude'];
-        if (imageUrl.isNotEmpty) {
-          existingData['photoURL'] = imageUrl;
-        }
-
-        // Save updated data back to SharedPreferences
-        await prefs.setString(
-            'UserInfo_Shared_Preference', jsonEncode(existingData));
+      if (selectedServices.isNotEmpty) {
+        await prefs.setString('services', jsonEncode(selectedServices));
       }
 
-      // Update the global state using provider (if necessary)
+      await prefs.setString('serviceDistance', serviceDistance.toString());
+
+      if (imageUrl.isNotEmpty) {
+        await prefs.setString('photoURL', imageUrl);
+      }
+
       ref.read(userInfoProvider.notifier).addUserInfo(
             fullName: fullNameController.text,
             userName: userNameController.text,
@@ -260,7 +247,7 @@ class _EditProfileState extends State<EditProfile> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Signup()),
+        MaterialPageRoute(builder: (context) => UserProfile()),
       );
     } catch (e) {
       print('Error saving user data: $e');

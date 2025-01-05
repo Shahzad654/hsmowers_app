@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hsmowers_app/providers/user_info_provider.dart';
 import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hsmowers_app/screens/signup.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/utils/code_to_latlang.dart';
 import 'package:image_picker/image_picker.dart';

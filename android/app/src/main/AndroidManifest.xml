@@ -8,7 +8,7 @@
     <application
         android:label="hsmowers_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/hsmowers">
 
         <meta-data
         android:name="com.google.android.geo.API_KEY"

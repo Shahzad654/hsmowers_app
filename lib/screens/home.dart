@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/screens/other_user_profile.dart';
-import 'package:hsmowers_app/screens/pricing_screen.dart';
 import 'package:hsmowers_app/screens/user_info_screen.dart';
 import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';

@@ -138,6 +138,7 @@ class CustomTextField extends StatelessWidget {
   final int? maxLines;
 
   const CustomTextField({
+    super.key,
     // required this.controller,
     required this.label,
     this.validator,

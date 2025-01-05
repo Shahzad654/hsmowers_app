@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_unnecessary_containers, sized_box_for_whitespace
 
 import 'package:flutter/material.dart';
-import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/theme.dart';
 
 class PricingScreen extends StatefulWidget {

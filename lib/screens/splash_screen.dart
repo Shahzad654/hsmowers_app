@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hsmowers_app/screens/home.dart';
-import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/theme.dart';
 
 class SplashScreen extends StatefulWidget {

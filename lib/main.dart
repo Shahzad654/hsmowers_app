@@ -4,11 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hsmowers_app/screens/home.dart';
-import 'package:hsmowers_app/screens/login.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:hsmowers_app/screens/splash_screen.dart';
-import 'package:hsmowers_app/screens/user_info_screen.dart';
-import 'package:hsmowers_app/widgets/find_mowers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

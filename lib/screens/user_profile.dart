@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_unnecessary_containers, empty_catches, use_build_context_synchronously
-
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -20,6 +18,7 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
+  int _currentIndex = 1; // Set to Profile tab by default
   String? photoURL;
   String? displayName;
   String? userName;
@@ -65,27 +64,15 @@ class _UserProfileState extends State<UserProfile> {
     String? storedDescription = prefs.getString('description');
     String? storedGrade = prefs.getString('grade');
     String? storedServiceArea = prefs.getString('serviceArea');
-    print(storedServiceArea);
     String? storedServices = prefs.getString('services');
     String? stroedServiceDistance = prefs.getString('serviceDistance');
     String? storedSchoolname = prefs.getString('schoolName');
     bool? storedAuth = prefs.getBool('isLoggedIn');
 
-    // List<dynamic>? decodedServiceArea;
-    // if (storedServiceArea != null) {
-    //   try {
-    //     decodedServiceArea = jsonDecode(storedServiceArea);
-    //     _generateStaticMapUrl(decodedServiceArea);
-    //   } catch (e) {
-    //     print("Error decoding serviceArea: $e");
-    //   }
-    // }
-
     List<dynamic>? decodedServiceArea;
     if (storedServiceArea != null) {
       try {
         decodedServiceArea = jsonDecode(storedServiceArea);
-
         if (decodedServiceArea != null && decodedServiceArea.isNotEmpty) {
           _generateStaticMapUrl(decodedServiceArea);
         }
@@ -110,8 +97,6 @@ class _UserProfileState extends State<UserProfile> {
       description = storedDescription;
       grade = storedGrade;
       isAuth = storedAuth;
-      // serviceArea = storedServiceArea;
-      // serviceArea = decodedServiceArea?.join(', ') ?? 'No service area';
       if (decodedServiceArea != null && decodedServiceArea.isNotEmpty) {
         serviceArea = decodedServiceArea
             .map((coord) => '${coord["lat"]}, ${coord["lng"]}')
@@ -119,7 +104,6 @@ class _UserProfileState extends State<UserProfile> {
       } else {
         serviceArea = 'No service area';
       }
-      print(serviceArea);
       services = decodedServices?.join(', ') ?? 'No services';
       serviceDistance = stroedServiceDistance;
       schoolName = storedSchoolname;
@@ -145,242 +129,206 @@ class _UserProfileState extends State<UserProfile> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-          appBar: AppBar(
-            actions: [
-              PopupMenuButton(
-                  icon: Icon(
-                    Icons.more_vert,
-                    size: 35,
-                  ),
-                  itemBuilder: (context) => [
-                        PopupMenuItem(
-                            onTap: () async {
-                              try {
-                                await FirebaseAuth.instance.signOut();
+        appBar: AppBar(
+          actions: [
+            PopupMenuButton(
+                icon: const Icon(
+                  Icons.more_vert,
+                  size: 35,
+                ),
+                itemBuilder: (context) => [
+                      PopupMenuItem(
+                          onTap: () async {
+                            try {
+                              await FirebaseAuth.instance.signOut();
+                              SharedPreferences prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.setBool('isLoggedIn', false);
+                              await prefs.remove('userName');
+                              await prefs.remove('email');
+                              await prefs.remove('photoURL');
+                              await prefs.remove('uid');
+                              await prefs.remove('displayName');
+                              await prefs.remove('grade');
+                              await prefs.remove('description');
+                              await prefs.remove('serviceArea');
+                              await prefs.remove('services');
 
-                                SharedPreferences prefs =
-                                    await SharedPreferences.getInstance();
-                                await prefs.setBool('isLoggedIn', false);
-                                await prefs.remove('userName');
-                                await prefs.remove('email');
-                                await prefs.remove('photoURL');
-                                await prefs.remove('uid');
-                                await prefs.remove('displayName');
-                                await prefs.remove('grade');
-                                await prefs.remove('description');
-                                await prefs.remove('serviceArea');
-                                await prefs.remove('services');
+                              setState(() {
+                                isAuth = false;
+                              });
 
-                                setState(() {
-                                  isAuth = false;
-                                });
-
-                                Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Login()));
-                              } catch (e) {
-                                print("Error during logout: $e");
-                              }
-                            },
-                            value: 1,
-                            child: Text(
-                              ('Logout'),
-                              style: AppTextStyles.h5
-                                  .copyWith(color: Colors.black),
-                            ))
-                      ]),
-            ],
-          ),
-          body: isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                  color: AppColors.primary,
-                ))
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Center(
-                        child: CircleAvatar(
-                          maxRadius: 60,
-                          backgroundImage: photoURL != null
-                              ? NetworkImage(photoURL!)
-                              : AssetImage('images/profile.jpg')
-                                  as ImageProvider,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Center(
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const Login()));
+                            } catch (e) {
+                              print("Error during logout: $e");
+                            }
+                          },
+                          value: 1,
                           child: Text(
-                        displayName ?? 'No Name',
-                        style: AppTextStyles.h3.copyWith(color: Colors.black),
-                      )),
-                      SizedBox(
-                        height: 10,
+                            ('Logout'),
+                            style:
+                                AppTextStyles.h5.copyWith(color: Colors.black),
+                          ))
+                    ]),
+          ],
+        ),
+        body: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                color: AppColors.primary,
+              ))
+            : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    Center(
+                      child: CircleAvatar(
+                        maxRadius: 60,
+                        backgroundImage: photoURL != null
+                            ? NetworkImage(photoURL!)
+                            : const AssetImage('images/profile.jpg')
+                                as ImageProvider,
                       ),
-                      Center(
+                    ),
+                    const SizedBox(height: 10),
+                    Center(
                         child: Text(
-                          {
-                                '9': 'Freshman',
-                                '10': 'Sophomore',
-                                '11': 'Junior',
-                                '12': 'Senior',
-                              }[grade] ??
-                              'No Grade',
-                          style: AppTextStyles.h6.copyWith(color: Colors.black),
+                      displayName ?? 'No Name',
+                      style: AppTextStyles.h3.copyWith(color: Colors.black),
+                    )),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Text(
+                        {
+                              '9': 'Freshman',
+                              '10': 'Sophomore',
+                              '11': 'Junior',
+                              '12': 'Senior',
+                            }[grade] ??
+                            'No Grade',
+                        style: AppTextStyles.h6.copyWith(color: Colors.black),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 350),
+                        child: Text(
+                          description ?? 'No description',
+                          textAlign: TextAlign.center,
+                          style:
+                              AppTextStyles.para.copyWith(color: Colors.black),
                         ),
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: 350),
-                          child: Text(
-                            description ?? 'no description',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.para
-                                .copyWith(color: Colors.black),
-                          ),
+                    ),
+                    const SizedBox(height: 30),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all(
+                                    AppColors.secondaryDark)),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EditProfile()));
+                            },
+                            child: Text(
+                              'Edit Profile',
+                              style: AppTextStyles.h5
+                                  .copyWith(color: Colors.white),
+                            )),
+                      ],
+                    ),
+                    const SizedBox(height: 50),
+                    if (staticMapUrl != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, right: 20),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.network(staticMapUrl!),
                         ),
                       ),
-                      SizedBox(
-                        height: 30,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // ElevatedButton(
-                          //     style: ButtonStyle(
-                          //         backgroundColor: WidgetStateProperty.all(
-                          //             AppColors.primaryDark)),
-                          //     onPressed: () {},
-                          //     child: Text(
-                          //       'Contact',
-                          //       style: AppTextStyles.h5
-                          //           .copyWith(color: Colors.white),
-                          //     )),
-                          // SizedBox(
-                          //   width: 20,
-                          // ),
-                          ElevatedButton(
-                              style: ButtonStyle(
-                                  backgroundColor: WidgetStateProperty.all(
-                                      AppColors.secondaryDark)),
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => EditProfile()));
-                              },
-                              child: Text(
-                                'Edit Profile',
-                                style: AppTextStyles.h5
-                                    .copyWith(color: Colors.white),
-                              )),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 50,
-                      ),
-                      if (staticMapUrl != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20, right: 20),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Image.network(staticMapUrl!),
-                          ),
-                        ),
-                      SizedBox(
-                        height: 50,
-                      ),
-                      Text(
-                        'Services',
-                        style: AppTextStyles.h3.copyWith(color: Colors.black),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 15,
-                        runSpacing: 15,
-                        children: [
-                          if (services != null && services!.contains('weeding'))
-                            buildServiceIcon(weedingIcon, 'Weeding'),
-                          if (services != null && services!.contains('mowing'))
-                            buildServiceIcon(mowersIcon, 'Mowing'),
-                          if (services != null && services!.contains('edging'))
-                            buildServiceIcon(egdingIcon, 'Edging'),
-                          if (services != null &&
-                              services!.contains('window-cleaning'))
-                            buildServiceIcon(
-                                windowcleaningIcon, 'Window Cleaning'),
-                          if (services != null &&
-                              services!.contains('snow-removal'))
-                            buildServiceIcon(snowremovalIcon, 'Snow Removal'),
-                          if (services != null &&
-                              services!.contains('baby-sitting'))
-                            buildServiceIcon(babysittingIcon, 'Baby Sitting'),
-                          if (services != null &&
-                              services!.contains('leaf-removal'))
-                            buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
-                          if (services != null &&
-                              services!.contains('dog-walking'))
-                            buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
-                        ],
-                      ),
-                    ],
-                  ),
+                    const SizedBox(height: 50),
+                    Text(
+                      'Services',
+                      style: AppTextStyles.h3.copyWith(color: Colors.black),
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 15,
+                      runSpacing: 15,
+                      children: [
+                        if (services != null && services!.contains('weeding'))
+                          buildServiceIcon(weedingIcon, 'Weeding'),
+                        if (services != null && services!.contains('mowing'))
+                          buildServiceIcon(mowersIcon, 'Mowing'),
+                        if (services != null && services!.contains('edging'))
+                          buildServiceIcon(egdingIcon, 'Edging'),
+                        if (services != null &&
+                            services!.contains('window-cleaning'))
+                          buildServiceIcon(
+                              windowcleaningIcon, 'Window Cleaning'),
+                        if (services != null &&
+                            services!.contains('snow-removal'))
+                          buildServiceIcon(snowremovalIcon, 'Snow Removal'),
+                        if (services != null &&
+                            services!.contains('baby-sitting'))
+                          buildServiceIcon(babysittingIcon, 'Baby Sitting'),
+                        if (services != null &&
+                            services!.contains('leaf-removal'))
+                          buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
+                        if (services != null &&
+                            services!.contains('dog-walking'))
+                          buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
+                      ],
+                    ),
+                  ],
                 ),
-          bottomNavigationBar: Material(
-            elevation: 10.0,
-            color: Colors.transparent,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(50.0),
-              topRight: Radius.circular(50.0),
+              ),
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          elevation: 10.0,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: Colors.grey,
+          type: BottomNavigationBarType.fixed,
+          iconSize: 30.0,
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            if (index == 0) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              );
+            } else if (index == 1) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const UserProfile()),
+              );
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
             ),
-            child: BottomNavigationBar(
-              backgroundColor: Colors.white,
-              elevation: 10.0,
-              selectedItemColor: AppColors.primary,
-              unselectedItemColor: Colors.grey,
-              type: BottomNavigationBarType.fixed,
-              iconSize: 30.0,
-              onTap: (index) {
-                setState(() {});
-                if (index == 0) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomeScreen()),
-                  );
-                } else if (index == 1) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => PricingScreen()),
-                  );
-                }
-              },
-              items: [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
-                  tooltip: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.subscriptions_outlined),
-                  label: 'Subscription',
-                  tooltip: 'Subscription',
-                ),
-              ],
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
-          )),
+          ],
+        ),
+      ),
     );
   }
 }

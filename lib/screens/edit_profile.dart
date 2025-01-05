@@ -1,13 +1,16 @@
 // ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, curly_braces_in_flow_control_structures
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hsmowers_app/providers/user_info_provider.dart';
-import 'package:hsmowers_app/screens/user_profile.dart';
+import 'package:hsmowers_app/screens/auth.dart';
+import 'package:hsmowers_app/screens/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hsmowers_app/screens/signup.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/utils/code_to_latlang.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,16 +37,40 @@ class _EditProfileState extends State<EditProfile> {
   double serviceDistance = 0;
   String? selectedGrade;
   File? profileImage;
-  String? photoURL;
-  String? grade;
-  String? description;
-  String? services;
 
   @override
   void initState() {
     super.initState();
-    _getUserData();
-    _getPhotoURL();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('userInfo')
+          .doc(userId)
+          .get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>;
+        fullNameController.text = userData['displayName'] ?? '';
+        userNameController.text = userData['userName'] ?? '';
+        phoneNumController.text = userData['phoneNumber'] ?? '';
+        schoolNameController.text = userData['schoolName'] ?? '';
+        descriptionController.text = userData['description'] ?? '';
+        addressCodeController.text = userData['zipCode'] ?? '';
+
+        setState(() {
+          selectedServices = List<String>.from(userData['services'] ?? []);
+          serviceDistance = userData['serviceDistance'] ?? 0.0;
+          // selectedGrade = userData['grade'];
+        });
+      }
+    } catch (e) {
+      print("Error loading user data: $e");
+    }
   }
 
   @override
@@ -89,10 +116,10 @@ class _EditProfileState extends State<EditProfile> {
     if (currentStep < 3) {
       setState(() => currentStep++);
     } else {
-      submitForm(context, ref);
+      submitForm(context);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => UserProfile()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     }
   }
@@ -103,89 +130,36 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
-  Future<void> _getPhotoURL() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedPhotoURL = prefs.getString('photoURL');
-    setState(() {
-      photoURL = storedPhotoURL;
-    });
-  }
-
-  Future<void> _getUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedDisplayName = prefs.getString('displayName');
-    String? storedUserName = prefs.getString('userName');
-    String? storedPhoneNum = prefs.getString('phoneNum');
-    String? storedDescription = prefs.getString('description');
-    String? storedGrade = prefs.getString('grade');
-    String? storedServices = prefs.getString('services');
-    String? storedServiceDistance = prefs.getString('serviceDistance');
-    String? storedSchoolName = prefs.getString('schoolName');
-    String? storedZipCode = prefs.getString('zipCode');
-
-    List<dynamic>? decodedServices;
-    if (storedServices != null) {
-      try {
-        decodedServices = jsonDecode(storedServices);
-      } catch (e) {
-        print("Error decoding services: $e");
-      }
-    }
-
-    setState(() {
-      fullNameController.text = storedDisplayName ?? '';
-      userNameController.text = storedUserName ?? '';
-      phoneNumController.text = storedPhoneNum ?? '';
-      schoolNameController.text = storedSchoolName ?? '';
-      descriptionController.text = storedDescription ?? '';
-      addressCodeController.text = storedZipCode ?? '';
-      selectedGrade = storedGrade;
-      serviceDistance = storedServiceDistance != null
-          ? double.tryParse(storedServiceDistance) ?? 0
-          : 0;
-      services = decodedServices?.join(', ') ?? 'No services';
-      services = decodedServices?.join(', ') ?? 'No services';
-      selectedServices = List<String>.from(decodedServices ?? []);
-    });
-  }
-
-  Future<void> submitForm(BuildContext context, WidgetRef ref) async {
+  void submitForm(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
     final addressCode = addressCodeController.text.trim();
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('uid');
-
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User ID not found')),
-      );
-      return;
-    }
 
     try {
       Map<String, double> latLong = await convertZipToLatLong(addressCode);
+      print(
+          'Latitude: ${latLong['latitude']}, Longitude: ${latLong['longitude']}');
+
+      File? imageFile = profileImage;
       String imageUrl = '';
 
-      if (profileImage != null) {
+      if (imageFile != null) {
         try {
-          String fileName = 'profilePics/$userId.jpg';
-          final storageRef = FirebaseStorage.instance.ref().child(fileName);
-
-          final metadata = SettableMetadata(
-              contentType: 'image/jpeg', customMetadata: {'userId': userId});
-          await storageRef.putFile(profileImage!, metadata);
-          imageUrl = await storageRef.getDownloadURL();
+          String fileName = 'profilePics/${userNameController.text}.jpg';
+          TaskSnapshot uploadTask =
+              await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
+          imageUrl = await uploadTask.ref.getDownloadURL();
+          print('Image uploaded successfully: $imageUrl');
         } catch (e) {
           print('Error uploading image: $e');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload profile image')),
+            SnackBar(content: Text('Failed to upload profile image: $e')),
           );
           return;
         }
       }
 
-      final userData = {
+      final formData = {
         'displayName': fullNameController.text,
         'userName': userNameController.text,
         'phoneNumber': phoneNumController.text,
@@ -197,61 +171,26 @@ class _EditProfileState extends State<EditProfile> {
         'zipCode': addressCode,
         'latitude': latLong['latitude'],
         'longitude': latLong['longitude'],
-        'updatedAt': FieldValue.serverTimestamp(),
+        'photoURL': imageUrl,
       };
 
-      if (imageUrl.isNotEmpty) {
-        userData['photoURL'] = imageUrl;
-      }
+      String userId = FirebaseAuth.instance.currentUser!.uid;
 
       await FirebaseFirestore.instance
           .collection('userInfo')
           .doc(userId)
-          .set(userData, SetOptions(merge: true));
+          .update(formData);
 
-      await prefs.setString('displayName', fullNameController.text);
-      await prefs.setString('userName', userNameController.text);
-      await prefs.setString('phoneNum', phoneNumController.text);
-      await prefs.setString('schoolName', schoolNameController.text);
-      await prefs.setString('grade', selectedGrade ?? '');
-      await prefs.setString('description', descriptionController.text);
-      await prefs.setString('zipCode', addressCode);
-
-      if (selectedServices.isNotEmpty) {
-        await prefs.setString('services', jsonEncode(selectedServices));
-      }
-
-      await prefs.setString('serviceDistance', serviceDistance.toString());
-
-      if (imageUrl.isNotEmpty) {
-        await prefs.setString('photoURL', imageUrl);
-      }
-
-      ref.read(userInfoProvider.notifier).addUserInfo(
-            fullName: fullNameController.text,
-            userName: userNameController.text,
-            phoneNumber: phoneNumController.text,
-            selectedServices: selectedServices,
-            serviceDistance: serviceDistance,
-            schoolName: schoolNameController.text,
-            selectedGrade: selectedGrade,
-            profileImage: profileImage,
-            description: descriptionController.text,
-            zipCode: addressCode,
-          );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profile updated successfully')),
-      );
+      print('User info updated successfully');
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => UserProfile()),
+        MaterialPageRoute(builder: (context) => AuthScreen()),
       );
     } catch (e) {
-      print('Error saving user data: $e');
+      print('Error during geocoding or update: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update profile: $e')),
+        SnackBar(content: Text('Failed to update user info: $e')),
       );
     }
   }
@@ -326,7 +265,6 @@ class _EditProfileState extends State<EditProfile> {
           onImageSelected: (file) => setState(() => profileImage = file),
           selectedGrade: selectedGrade,
           currentImage: profileImage,
-          photoURL: photoURL,
         );
       case 3:
         return Step4Widget(
@@ -498,7 +436,7 @@ class _Step2WidgetState extends State<Step2Widget> {
         ),
         SizedBox(height: 24),
         Text(
-          'Service Distance: ${distance.toStringAsFixed(1)} Miles',
+          'Service Distance: ${distance.toStringAsFixed(1)} km',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         Slider(
@@ -506,7 +444,7 @@ class _Step2WidgetState extends State<Step2Widget> {
           min: 0,
           max: 50,
           divisions: 50,
-          label: '${distance.toStringAsFixed(1)} Miles',
+          label: '${distance.toStringAsFixed(1)} km',
           onChanged: (value) {
             setState(() => distance = value);
             widget.onDistanceChanged(value);
@@ -523,7 +461,6 @@ class Step3Widget extends StatelessWidget {
   final Function(File) onImageSelected;
   final String? selectedGrade;
   final File? currentImage;
-  final String? photoURL;
 
   const Step3Widget({
     required this.schoolNameController,
@@ -531,7 +468,6 @@ class Step3Widget extends StatelessWidget {
     required this.onImageSelected,
     required this.selectedGrade,
     required this.currentImage,
-    this.photoURL,
   });
 
   Future<void> _pickImage() async {
@@ -558,12 +494,9 @@ class Step3Widget extends StatelessWidget {
           onTap: _pickImage,
           child: CircleAvatar(
             radius: 50,
-            backgroundImage: photoURL != null
-                ? NetworkImage(photoURL!)
-                : currentImage != null
-                    ? FileImage(currentImage!)
-                    : null,
-            child: currentImage == null && photoURL == null
+            backgroundImage:
+                currentImage != null ? FileImage(currentImage!) : null,
+            child: currentImage == null
                 ? Icon(Icons.camera_alt, size: 30, color: Colors.white)
                 : null,
           ),
@@ -625,10 +558,9 @@ class Step4Widget extends StatelessWidget {
           label: 'Zip Code or Address',
           keyboardType: TextInputType.text,
           validator: (value) {
-            if (value?.isEmpty ?? true)
-              return 'Please enter zip code or address';
+            if (value?.isEmpty ?? true) return 'Please enter zip code';
             if (value!.length != 5 || value == '')
-              return 'Please enter a valid zip code or address';
+              return 'Please enter a valid zip code';
             return null;
           },
         ),

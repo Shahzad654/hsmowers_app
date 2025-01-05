@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:hsmowers_app/screens/auth.dart';
 import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/widgets/google_maps.dart';
@@ -28,74 +29,6 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
-    if (isLoggedIn) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const UserProfile(),
-        ),
-      );
-    }
-  }
-
-  Future<void> storeUserDataInPreferences(Map<String, dynamic> userData) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    await prefs.setString('userName', userData['userName'] ?? '');
-    await prefs.setString('email', userData['email'] ?? '');
-    await prefs.setString('phoneNum', userData['phoneNumber'] ?? '');
-    await prefs.setString('photoURL', userData['photoURL'] ?? '');
-    await prefs.setString('uid', userData['uid'] ?? '');
-    await prefs.setString('displayName', userData['displayName'] ?? '');
-    await prefs.setString('schoolName', userData['schoolName'] ?? '');
-    await prefs.setString('grade', userData['grade'] ?? '');
-    await prefs.setString('description', userData['description'] ?? '');
-    await prefs.setString('zipCode', userData['zipCode'] ?? '');
-
-    if (userData['serviceArea'] != null) {
-      if (userData['serviceArea']['path'] != null) {
-        await prefs.setString(
-            'serviceArea', jsonEncode(userData['serviceArea']['path']));
-      } else {
-        await prefs.setString(
-            'serviceArea', jsonEncode(userData['serviceArea']));
-      }
-    }
-
-    if (userData['services'] != null && userData['services'] is List) {
-      String servicesJson = jsonEncode(userData['services']);
-      await prefs.setString('services', servicesJson);
-    }
-
-    await prefs.setBool('isLoggedIn', true);
-  }
-
-  void storeUserDataProvider(
-      BuildContext context, WidgetRef ref, Map<String, dynamic> userData) {
-    try {
-      ref.read(userInfoProvider.notifier).addUserInfo(
-            fullName: userData['displayName'] ?? '',
-            userName: userData['userName'] ?? '',
-            phoneNumber: userData['phoneNumber'] ?? '',
-            selectedServices: List<String>.from(userData['services'] ?? []),
-            serviceDistance: (userData['serviceDistance'] ?? 0.0).toDouble(),
-            schoolName: userData['schoolName'] ?? '',
-            selectedGrade: userData['grade'] ?? '',
-            // profileImage: userData['photoURL'],
-            description: userData['description'] ?? '',
-            zipCode: userData['zipCode'] ?? '',
-          );
-
-      print('User data successfully stored in Riverpod');
-    } catch (e) {
-      print('Error storing data in Riverpod: $e');
-    }
   }
 
   Future<String?> login({
@@ -120,32 +53,14 @@ class _LoginState extends State<Login> {
           .get();
 
       if (userSnapshot.exists) {
-        var userData = userSnapshot.data() as Map<String, dynamic>;
-        await storeUserDataInPreferences(userData);
-
-        storeUserDataProvider(context, ref, userData);
-
-        if (userData['serviceArea'] != null &&
-            userData['serviceArea'] is Map &&
-            userData['serviceArea']['path'] != null &&
-            userData['serviceArea']['path'] is List &&
-            (userData['serviceArea']['path'] as List).isNotEmpty) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const UserProfile(),
-            ),
-          );
-          return 'Successfully LoggedIn';
-        } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const GoogleMaps(),
-            ),
-          );
-          return 'Success-maps';
-        }
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const AuthScreen(),
+          ),
+        );
+        return 'Successfully Logged In';
       } else {
-        return 'Account not found. Please check your credentials.';
+        return 'User data not found.';
       }
     } on FirebaseAuthException catch (e) {
       return _getReadableErrorMessage(e.code);
@@ -281,20 +196,12 @@ class _LoginState extends State<Login> {
                             password: _passwordController.text.trim(),
                             ref: ref,
                           );
-                          if (!mounted) return;
-
-                          if (message == 'Success-maps') {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => const GoogleMaps(),
-                              ),
-                            );
-                          } else {
+                          if (message != null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(message!),
+                                content: Text(message),
                                 backgroundColor:
-                                    message.contains('Successfully LoggedIn')
+                                    message.contains('Successfully Logged In')
                                         ? Colors.green
                                         : Colors.red,
                                 duration: const Duration(seconds: 3),

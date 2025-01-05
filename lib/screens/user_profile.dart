@@ -5,10 +5,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:hsmowers_app/screens/edit_profile.dart';
 import 'package:hsmowers_app/screens/home.dart';
 import 'package:hsmowers_app/screens/login.dart';
-import 'package:hsmowers_app/screens/pricing_screen.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hsmowers_app/providers/user_info_provider.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -18,7 +19,7 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  int _currentIndex = 1; // Set to Profile tab by default
+  int _currentIndex = 1;
   String? photoURL;
   String? displayName;
   String? userName;
@@ -40,12 +41,30 @@ class _UserProfileState extends State<UserProfile> {
   String snowremovalIcon = 'images/snowremoval.svg';
   String babysittingIcon = 'images/babysitting.svg';
   String windowcleaningIcon = 'images/windowcleaning.svg';
+  User? currentUser;
 
   @override
   void initState() {
     super.initState();
     _getPhotoURL();
     _getUserData();
+    _getCurrentUser();
+  }
+
+  Future<void> _getCurrentUser() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      currentUser = user; // Store the user in state
+    });
+
+    if (user != null) {
+      print('Current User ID: ${user.uid}');
+      print('Current User Email: ${user.email}');
+      print('Current User Display Name: ${user.displayName}');
+      print('Current User Photo URL: ${user.photoURL}');
+    } else {
+      print('No user currently signed in');
+    }
   }
 
   Future<void> _getPhotoURL() async {
@@ -185,18 +204,18 @@ class _UserProfileState extends State<UserProfile> {
                   children: [
                     const SizedBox(height: 20),
                     Center(
-                      child: CircleAvatar(
-                        maxRadius: 60,
-                        backgroundImage: photoURL != null
-                            ? NetworkImage(photoURL!)
-                            : const AssetImage('images/profile.jpg')
-                                as ImageProvider,
-                      ),
-                    ),
+                        // child: CircleAvatar(
+                        //   maxRadius: 60,
+                        //   backgroundImage: photoURL != null
+                        //       ? NetworkImage(photoURL!)
+                        //       : const AssetImage('images/profile.jpg')
+                        //           as ImageProvider,
+                        // ),
+                        ),
                     const SizedBox(height: 10),
                     Center(
                         child: Text(
-                      displayName ?? 'No Name',
+                      currentUser?.displayName ?? 'No Name',
                       style: AppTextStyles.h3.copyWith(color: Colors.black),
                     )),
                     const SizedBox(height: 10),

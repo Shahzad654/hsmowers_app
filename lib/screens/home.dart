@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:hsmowers_app/screens/auth.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/screens/other_user_profile.dart';
 import 'package:hsmowers_app/screens/user_info_screen.dart';
@@ -23,13 +25,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> userData = [];
   String? enteredZipCode;
   String? photoURL;
+  String? displayName;
   bool isLoggedIn = false;
 
   @override
   void initState() {
     super.initState();
     getData();
-    _getUserData();
+    _listenAuthChanges();
     _getPhotoURL();
   }
 
@@ -91,12 +94,50 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _getUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-      print(isLoggedIn);
+  void _listenAuthChanges() {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      setState(() {
+        if (user != null) {
+          isLoggedIn = true;
+          _getUserData(user); // Fetch user data from Firestore
+        } else {
+          isLoggedIn = false;
+          _loading = false;
+        }
+      });
     });
+  }
+
+  Future<void> _getUserData(User user) async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      setState(() {
+        isLoggedIn = true; // User is logged in
+      });
+
+      // Fetch user profile details from Firestore
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('userInfo')
+          .doc(currentUser.uid)
+          .get();
+
+      if (userSnapshot.exists) {
+        setState(() {
+          displayName =
+              userSnapshot['displayName'] ?? 'No Name'; // Get display name
+          photoURL = userSnapshot['photoURL'] ??
+              currentUser
+                  .photoURL; // Get photo URL from Firestore or use Firebase Auth photoURL
+          _loading = false; // Stop loading once data is fetched
+        });
+      }
+    } else {
+      setState(() {
+        isLoggedIn = false; // User is not logged in
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _getPhotoURL() async {
@@ -119,9 +160,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? InkWell(
                       onTap: () {
                         Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => UserProfile()));
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AuthScreen(), // Go to the user profile
+                          ),
+                        );
                       },
                       child: CircleAvatar(
                         backgroundImage: NetworkImage(photoURL!),
@@ -129,13 +173,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   : ElevatedButton(
                       onPressed: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) => Login()));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => Login()),
+                        );
                       },
                       child: Text(
                         'Login',
                         style: TextStyle(color: Colors.black),
-                      )),
+                      ),
+                    ),
             ),
           ],
         ),

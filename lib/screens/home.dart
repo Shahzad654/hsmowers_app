@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         if (user != null) {
           isLoggedIn = true;
-          _getUserData(user); // Fetch user data from Firestore
+          _getUserData(user);
         } else {
           isLoggedIn = false;
           _loading = false;
@@ -113,10 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (currentUser != null) {
       setState(() {
-        isLoggedIn = true; // User is logged in
+        isLoggedIn = true;
       });
 
-      // Fetch user profile details from Firestore
       DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
           .collection('userInfo')
           .doc(currentUser.uid)
@@ -124,17 +123,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (userSnapshot.exists) {
         setState(() {
-          displayName =
-              userSnapshot['displayName'] ?? 'No Name'; // Get display name
-          photoURL = userSnapshot['photoURL'] ??
-              currentUser
-                  .photoURL; // Get photo URL from Firestore or use Firebase Auth photoURL
-          _loading = false; // Stop loading once data is fetched
+          displayName = userSnapshot['displayName'] ?? 'No Name';
+          photoURL = userSnapshot['photoURL'] ?? currentUser.photoURL;
+          _loading = false;
         });
       }
     } else {
       setState(() {
-        isLoggedIn = false; // User is not logged in
+        isLoggedIn = false;
         _loading = false;
       });
     }
@@ -146,6 +142,14 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       photoURL = storedPhotoURL;
     });
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _loading = true;
+      userData = [];
+    });
+    await getData();
   }
 
   @override
@@ -162,8 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                AuthScreen(), // Go to the user profile
+                            builder: (context) => AuthScreen(),
                           ),
                         );
                       },
@@ -186,256 +189,261 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              SizedBox(height: 20),
-              Center(
-                  child: Image(
-                      height: 130,
-                      fit: BoxFit.cover,
-                      image: AssetImage('images/hsmowerslogo.png'))),
-              SizedBox(height: 30),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      text: 'Find your next',
-                      style: AppTextStyles.h2.copyWith(color: Colors.black),
-                      children: [
-                        TextSpan(
-                          text: ' Mower',
-                          style: TextStyle(color: AppColors.primary),
-                        )
-                      ],
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: 20),
+                Center(
+                    child: Image(
+                        height: 130,
+                        fit: BoxFit.cover,
+                        image: AssetImage('images/hsmowerslogo.png'))),
+                SizedBox(height: 30),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        text: 'Find your next',
+                        style: AppTextStyles.h2.copyWith(color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: ' Mower',
+                            style: TextStyle(color: AppColors.primary),
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 5),
-                  Center(
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.only(left: 40, right: 40),
+                    SizedBox(height: 5),
+                    Center(
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.only(left: 40, right: 40),
+                        child: Text(
+                          'No Ads. No SignUp. Support local students & get a great looking lawn',
+                          style: AppTextStyles.h6.copyWith(color: Colors.black),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    SizedBox(height: 15),
+                    ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor:
+                            WidgetStateProperty.all(AppColors.primaryDark),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => FindMowers()));
+                      },
                       child: Text(
-                        'No Ads. No SignUp. Support local students & get a great looking lawn',
-                        style: AppTextStyles.h6.copyWith(color: Colors.black),
-                        textAlign: TextAlign.center,
+                        'Find Mower',
+                        style: AppTextStyles.h5.copyWith(color: Colors.white),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 30),
-                  SizedBox(height: 15),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor:
-                          WidgetStateProperty.all(AppColors.primaryDark),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => FindMowers()));
-                    },
-                    child: Text(
-                      'Find Mower',
-                      style: AppTextStyles.h5.copyWith(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 40),
-              InkWell(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return StatefulBuilder(
-                        builder: (context, setState) {
-                          return Material(
-                            color: Colors.transparent,
-                            child: AlertDialog(
-                              title: Row(
-                                children: [
-                                  Text(
-                                    'Consent Form',
-                                    style: AppTextStyles.h4
-                                        .copyWith(color: Colors.black),
-                                  ),
-                                  SizedBox(
-                                    width: 60,
-                                  ),
-                                  InkWell(
-                                      onTap: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Icon(Icons.close)),
-                                ],
-                              ),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ListTile(
-                                    leading: Radio<int>(
-                                      value: 1,
-                                      groupValue: _selectedConsent,
-                                      onChanged: (int? value) {
-                                        setState(() {
-                                          _selectedConsent = value;
-                                        });
-                                        this.setState(() {});
-                                      },
-                                    ),
-                                    title: Text(
-                                        'Yes, I am over 13 years old and I am currently enrolled in High School'),
-                                  ),
-                                  ListTile(
-                                    leading: Radio<int>(
-                                      value: 2,
-                                      groupValue: _selectedConsent,
-                                      onChanged: (int? value) {
-                                        setState(() {
-                                          _selectedConsent = value;
-                                        });
-                                        this.setState(() {});
-                                      },
-                                    ),
-                                    title:
-                                        Text('No, I am not over 13 years old'),
-                                  ),
-                                  ListTile(
-                                    leading: Radio<int>(
-                                      value: 3,
-                                      groupValue: _selectedConsent,
-                                      onChanged: (int? value) {
-                                        setState(() {
-                                          _selectedConsent = value;
-                                        });
-                                        this.setState(() {});
-                                      },
-                                    ),
-                                    title: Text(
-                                        'No, I am not currently enrolled in High School.'),
-                                  ),
-                                  SizedBox(height: 10),
-                                  ElevatedButton(
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            WidgetStateProperty.all(
-                                                AppColors.primaryDark)),
-                                    onPressed: _handleSubmit,
-                                    child: Text(
-                                      'Submit',
-                                      style: AppTextStyles.h5
-                                          .copyWith(color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              // actions: [
-                              //   TextButton(
-                              //     onPressed: () {
-                              //       Navigator.of(context).pop();
-                              //     },
-                              //     child: Text('Close'),
-                              //   ),
-                              // ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-                child: Text(
-                  'Student? Signup!',
-                  style: AppTextStyles.h5.copyWith(
-                      decoration: TextDecoration.underline,
-                      color: Colors.black),
+                  ],
                 ),
-              ),
-              SizedBox(height: 40),
-              Text(
-                'Recently Created Profiles',
-                style: AppTextStyles.h4.copyWith(color: Colors.black),
-              ),
-              SizedBox(height: 20),
-              _loading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : userData.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No profiles available',
-                            style: AppTextStyles.h5,
-                          ),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: userData.length,
-                          itemBuilder: (context, index) {
-                            final username =
-                                userData[index]['userName'] ?? 'No Username';
-                            return Container(
-                              margin: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.primary),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ListTile(
-                                contentPadding: EdgeInsets.all(10),
-                                trailing: CircleAvatar(
-                                  backgroundImage:
-                                      userData[index]['photoURL'] != null
-                                          ? NetworkImage(
-                                              userData[index]['photoURL'])
-                                          : AssetImage('images/mowers1.jpg')
-                                              as ImageProvider,
-                                ),
-                                title: Text(
-                                  userData[index]['displayName'] ?? 'No Name',
-                                  style: AppTextStyles.h5
-                                      .copyWith(color: Colors.black),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                SizedBox(height: 40),
+                InkWell(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return StatefulBuilder(
+                          builder: (context, setState) {
+                            return Material(
+                              color: Colors.transparent,
+                              child: AlertDialog(
+                                title: Row(
                                   children: [
                                     Text(
-                                      {
-                                            '9': 'Freshman',
-                                            '10': 'Sophomore',
-                                            '11': 'Junior',
-                                            '12': 'Senior',
-                                          }[userData[index]['grade']] ??
-                                          'No Grade',
+                                      'Consent Form',
+                                      style: AppTextStyles.h4
+                                          .copyWith(color: Colors.black),
                                     ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      userData[index]['services']?.join(', ') ??
-                                          'No Services Listed',
-                                      style: TextStyle(color: Colors.grey),
+                                    SizedBox(
+                                      width: 60,
+                                    ),
+                                    InkWell(
+                                        onTap: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Icon(Icons.close)),
+                                  ],
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      leading: Radio<int>(
+                                        value: 1,
+                                        groupValue: _selectedConsent,
+                                        onChanged: (int? value) {
+                                          setState(() {
+                                            _selectedConsent = value;
+                                          });
+                                          this.setState(() {});
+                                        },
+                                      ),
+                                      title: Text(
+                                          'Yes, I am over 13 years old and I am currently enrolled in High School'),
+                                    ),
+                                    ListTile(
+                                      leading: Radio<int>(
+                                        value: 2,
+                                        groupValue: _selectedConsent,
+                                        onChanged: (int? value) {
+                                          setState(() {
+                                            _selectedConsent = value;
+                                          });
+                                          this.setState(() {});
+                                        },
+                                      ),
+                                      title: Text(
+                                          'No, I am not over 13 years old'),
+                                    ),
+                                    ListTile(
+                                      leading: Radio<int>(
+                                        value: 3,
+                                        groupValue: _selectedConsent,
+                                        onChanged: (int? value) {
+                                          setState(() {
+                                            _selectedConsent = value;
+                                          });
+                                          this.setState(() {});
+                                        },
+                                      ),
+                                      title: Text(
+                                          'No, I am not currently enrolled in High School.'),
+                                    ),
+                                    SizedBox(height: 10),
+                                    ElevatedButton(
+                                      style: ButtonStyle(
+                                          backgroundColor:
+                                              WidgetStateProperty.all(
+                                                  AppColors.primaryDark)),
+                                      onPressed: _handleSubmit,
+                                      child: Text(
+                                        'Submit',
+                                        style: AppTextStyles.h5
+                                            .copyWith(color: Colors.white),
+                                      ),
                                     ),
                                   ],
                                 ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          OtherUsers(username: username),
-                                    ),
-                                  );
-                                },
+                                // actions: [
+                                //   TextButton(
+                                //     onPressed: () {
+                                //       Navigator.of(context).pop();
+                                //     },
+                                //     child: Text('Close'),
+                                //   ),
+                                // ],
                               ),
                             );
                           },
+                        );
+                      },
+                    );
+                  },
+                  child: Text(
+                    'Student? Signup!',
+                    style: AppTextStyles.h5.copyWith(
+                        decoration: TextDecoration.underline,
+                        color: Colors.black),
+                  ),
+                ),
+                SizedBox(height: 40),
+                Text(
+                  'Recently Created Profiles',
+                  style: AppTextStyles.h4.copyWith(color: Colors.black),
+                ),
+                SizedBox(height: 20),
+                _loading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
                         ),
-            ],
+                      )
+                    : userData.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No profiles available',
+                              style: AppTextStyles.h5,
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: userData.length,
+                            itemBuilder: (context, index) {
+                              final username =
+                                  userData[index]['userName'] ?? 'No Username';
+                              return Container(
+                                margin: EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.primary),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.all(10),
+                                  trailing: CircleAvatar(
+                                    backgroundImage:
+                                        userData[index]['photoURL'] != null
+                                            ? NetworkImage(
+                                                userData[index]['photoURL'])
+                                            : AssetImage('images/mowers1.jpg')
+                                                as ImageProvider,
+                                  ),
+                                  title: Text(
+                                    userData[index]['displayName'] ?? 'No Name',
+                                    style: AppTextStyles.h5
+                                        .copyWith(color: Colors.black),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        {
+                                              '9': 'Freshman',
+                                              '10': 'Sophomore',
+                                              '11': 'Junior',
+                                              '12': 'Senior',
+                                            }[userData[index]['grade']] ??
+                                            'No Grade',
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        userData[index]['services']
+                                                ?.join(', ') ??
+                                            'No Services Listed',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            OtherUsers(username: username),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+              ],
+            ),
           ),
         ),
         // bottomNavigationBar: Container(

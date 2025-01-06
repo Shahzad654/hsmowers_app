@@ -37,11 +37,22 @@ class _EditProfileState extends State<EditProfile> {
   double serviceDistance = 0;
   String? selectedGrade;
   File? profileImage;
+  String? photoURL;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _getPhotoURL();
+  }
+
+  Future<void> _getPhotoURL() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        photoURL = user.photoURL;
+      });
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -67,6 +78,7 @@ class _EditProfileState extends State<EditProfile> {
           serviceDistance = userData['serviceDistance'] ?? 0.0;
           // selectedGrade = userData['grade'];
         });
+        String? photoURL = userData['photoURL'];
       }
     } catch (e) {
       print("Error loading user data: $e");
@@ -182,6 +194,12 @@ class _EditProfileState extends State<EditProfile> {
           .update(formData);
 
       print('User info updated successfully');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Profile updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
       Navigator.pushReplacement(
         context,
@@ -190,7 +208,7 @@ class _EditProfileState extends State<EditProfile> {
     } catch (e) {
       print('Error during geocoding or update: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update user info: $e')),
+        SnackBar(content: Text('Failed to update user profile: $e')),
       );
     }
   }
@@ -265,6 +283,7 @@ class _EditProfileState extends State<EditProfile> {
           onImageSelected: (file) => setState(() => profileImage = file),
           selectedGrade: selectedGrade,
           currentImage: profileImage,
+          photoURL: photoURL,
         );
       case 3:
         return Step4Widget(
@@ -461,6 +480,7 @@ class Step3Widget extends StatelessWidget {
   final Function(File) onImageSelected;
   final String? selectedGrade;
   final File? currentImage;
+  final String? photoURL;
 
   const Step3Widget({
     required this.schoolNameController,
@@ -468,9 +488,10 @@ class Step3Widget extends StatelessWidget {
     required this.onImageSelected,
     required this.selectedGrade,
     required this.currentImage,
+    this.photoURL,
   });
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
@@ -491,12 +512,15 @@ class Step3Widget extends StatelessWidget {
     return Column(
       children: [
         GestureDetector(
-          onTap: _pickImage,
+          onTap: () => _pickImage(context),
           child: CircleAvatar(
             radius: 50,
-            backgroundImage:
-                currentImage != null ? FileImage(currentImage!) : null,
-            child: currentImage == null
+            backgroundImage: photoURL != null
+                ? NetworkImage(photoURL!)
+                : currentImage != null
+                    ? FileImage(currentImage!)
+                    : null,
+            child: currentImage == null && photoURL == null
                 ? Icon(Icons.camera_alt, size: 30, color: Colors.white)
                 : null,
           ),

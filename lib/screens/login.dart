@@ -31,6 +31,20 @@ class _LoginState extends State<Login> {
     super.initState();
   }
 
+  Future<void> storeUserDataInPreferences(Map<String, dynamic> userData) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (userData['serviceArea'] != null) {
+      if (userData['serviceArea']['path'] != null) {
+        await prefs.setString(
+            'serviceArea', jsonEncode(userData['serviceArea']['path']));
+      } else {
+        await prefs.setString(
+            'serviceArea', jsonEncode(userData['serviceArea']));
+      }
+    }
+  }
+
   Future<String?> login({
     required String email,
     required String password,
@@ -53,12 +67,27 @@ class _LoginState extends State<Login> {
           .get();
 
       if (userSnapshot.exists) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const AuthScreen(),
-          ),
-        );
-        return 'Successfully Logged In';
+        var userData = userSnapshot.data() as Map<String, dynamic>;
+        await storeUserDataInPreferences(userData);
+        if (userData['serviceArea'] != null &&
+            userData['serviceArea'] is Map &&
+            userData['serviceArea']['path'] != null &&
+            userData['serviceArea']['path'] is List &&
+            (userData['serviceArea']['path'] as List).isNotEmpty) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const AuthScreen(),
+            ),
+          );
+          return 'Successfully Logged In';
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const GoogleMaps(),
+            ),
+          );
+          return 'Success-maps';
+        }
       } else {
         return 'User data not found.';
       }

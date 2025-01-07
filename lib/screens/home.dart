@@ -1,39 +1,62 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, avoid_print
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:hsmowers_app/models/auth_user_model.dart';
+import 'package:hsmowers_app/providers/auth_user_provider.dart';
 import 'package:hsmowers_app/screens/auth.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/screens/other_user_profile.dart';
 import 'package:hsmowers_app/screens/user_info_screen.dart';
-import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hsmowers_app/widgets/find_mowers.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hsmowers_app/models/auth_user_model.dart' as model;
+import 'package:hsmowers_app/providers/auth_user_provider.dart' as provider;
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int? _selectedConsent;
   bool _loading = true;
   List<Map<String, dynamic>> userData = [];
   String? enteredZipCode;
-  String? photoURL;
-  String? displayName;
-  bool isLoggedIn = false;
 
   @override
   void initState() {
     super.initState();
     getData();
-    _listenAuthChanges();
-    _getPhotoURL();
+  }
+
+  Future<void> checkAuthState() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      ref.read(model.authUserProvider.notifier).updateUser(
+            model.AuthUserModel(
+              uid: user.uid,
+              fullName: user.displayName ?? '',
+              userName: '',
+              phoneNumber: '',
+              selectedServices: [],
+              serviceDistance: 0.0,
+              schoolName: '',
+              photoURL: user.photoURL,
+              selectedGrade: null,
+              description: '',
+              zipCode: '',
+              isLoggedIn: true,
+            ),
+          );
+    }
   }
 
   Future<void> getData() async {
@@ -94,56 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _listenAuthChanges() {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      setState(() {
-        if (user != null) {
-          isLoggedIn = true;
-          _getUserData(user);
-        } else {
-          isLoggedIn = false;
-          _loading = false;
-        }
-      });
-    });
-  }
-
-  Future<void> _getUserData(User user) async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser != null) {
-      setState(() {
-        isLoggedIn = true;
-      });
-
-      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
-          .collection('userInfo')
-          .doc(currentUser.uid)
-          .get();
-
-      if (userSnapshot.exists) {
-        setState(() {
-          displayName = userSnapshot['displayName'] ?? 'No Name';
-          photoURL = userSnapshot['photoURL'] ?? currentUser.photoURL;
-          _loading = false;
-        });
-      }
-    } else {
-      setState(() {
-        isLoggedIn = false;
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _getPhotoURL() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedPhotoURL = prefs.getString('photoURL');
-    setState(() {
-      photoURL = storedPhotoURL;
-    });
-  }
-
   Future<void> _refreshData() async {
     setState(() {
       _loading = true;
@@ -152,26 +125,60 @@ class _HomeScreenState extends State<HomeScreen> {
     await getData();
   }
 
+  Future<void> _getLocation() async {
+    PermissionStatus permission = await Permission.location.request();
+    if (!permission.isGranted) {
+      print("Location permission denied");
+      return;
+    }
+
+    List<Location> locations =
+        await locationFromAddress('Your current location');
+
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+        locations.first.latitude, locations.first.longitude);
+    Placemark place = placemarks.first;
+
+    String zipCode = place.postalCode ?? 'No Zip Code Available';
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('latitude', locations.first.latitude);
+    await prefs.setDouble('longitude', locations.first.longitude);
+    await prefs.setString('zipCode', zipCode);
+
+    setState(() {
+      print(
+          'User Location: Latitude: ${locations.first.latitude}, Longitude: ${locations.first.longitude}, Zip Code: $zipCode');
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FindMowers()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authUser = ref.watch(model.authUserProvider);
+    print(authUser.isLoggedIn);
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 10),
-              child: isLoggedIn && photoURL != null
+              child: authUser.isLoggedIn
                   ? InkWell(
                       onTap: () {
                         Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AuthScreen(),
-                          ),
-                        );
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AuthScreen()));
                       },
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(photoURL!),
+                      child: Icon(
+                        Icons.person_2_outlined,
+                        size: 32,
                       ),
                     )
                   : ElevatedButton(
@@ -187,6 +194,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
             ),
+
+            // InkWell(
+            //   onTap: () {
+            //     Navigator.push(context,
+            //         MaterialPageRoute(builder: (context) => AuthScreen()));
+            //   },
+            //   child: Icon(Icons.person),
+            // )
           ],
         ),
         body: RefreshIndicator(
@@ -236,12 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         backgroundColor:
                             WidgetStateProperty.all(AppColors.primaryDark),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => FindMowers()));
-                      },
+                      onPressed: _getLocation,
                       child: Text(
                         'Find Mower',
                         style: AppTextStyles.h5.copyWith(color: Colors.white),
@@ -337,14 +347,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ],
                                 ),
-                                // actions: [
-                                //   TextButton(
-                                //     onPressed: () {
-                                //       Navigator.of(context).pop();
-                                //     },
-                                //     child: Text('Close'),
-                                //   ),
-                                // ],
                               ),
                             );
                           },
@@ -446,67 +448,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        // bottomNavigationBar: Container(
-        //   decoration: BoxDecoration(
-        //     color: Colors.white,
-        //     boxShadow: [
-        //       BoxShadow(
-        //         color: Colors.grey.withOpacity(0.2),
-        //         spreadRadius: 5,
-        //         blurRadius: 10,
-        //         offset: Offset(0, -2),
-        //       ),
-        //     ],
-        //     borderRadius: BorderRadius.only(
-        //       topLeft: Radius.circular(30.0),
-        //       topRight: Radius.circular(30.0),
-        //     ),
-        //   ),
-        //   child: BottomNavigationBar(
-        //     backgroundColor: Colors.white,
-        //     elevation: 10.0,
-        //     selectedItemColor: AppColors.primary,
-        //     unselectedItemColor: Colors.grey,
-        //     type: BottomNavigationBarType.fixed,
-        //     iconSize: 30.0,
-        //     onTap: (index) {
-        //       setState(() {});
-        //       if (index == 0) {
-        //         Navigator.pushReplacement(
-        //           context,
-        //           MaterialPageRoute(builder: (context) => HomeScreen()),
-        //         );
-        //       } else if (index == 1) {
-        //         Navigator.pushReplacement(
-        //           context,
-        //           MaterialPageRoute(builder: (context) => PricingScreen()),
-        //         );
-        //       } else if (index == 2) {
-        //         Navigator.pushReplacement(
-        //           context,
-        //           MaterialPageRoute(builder: (context) => Login()),
-        //         );
-        //       }
-        //     },
-        //     items: [
-        //       BottomNavigationBarItem(
-        //         icon: Icon(Icons.home),
-        //         label: 'Home',
-        //         tooltip: 'Home',
-        //       ),
-        //       BottomNavigationBarItem(
-        //         icon: Icon(Icons.subscriptions_rounded),
-        //         label: 'Pricing',
-        //         tooltip: 'Pricing',
-        //       ),
-        //       BottomNavigationBarItem(
-        //         icon: Icon(Icons.login),
-        //         label: 'Login',
-        //         tooltip: 'Login',
-        //       ),
-        //     ],
-        //   ),
-        // ),
       ),
     );
   }

@@ -52,6 +52,8 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
     <string>We need access to your location</string>
 	<key>NSCameraUsageDescription</key>
+	<key>NSLocationAlwaysUsageDescription</key>
+    <string>We need access to your location.</string>
 	
 	<string>Allow access to camera</string>
 	<key>NSMicrophoneUsageDescription</key>

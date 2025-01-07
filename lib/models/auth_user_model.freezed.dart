@@ -27,7 +27,7 @@ mixin _$AuthUserModel {
   List<String> get selectedServices => throw _privateConstructorUsedError;
   double get serviceDistance => throw _privateConstructorUsedError;
   String get schoolName => throw _privateConstructorUsedError;
-  String get photoURL => throw _privateConstructorUsedError;
+  String? get photoURL => throw _privateConstructorUsedError;
   String? get selectedGrade => throw _privateConstructorUsedError;
   String get description => throw _privateConstructorUsedError;
   String get zipCode => throw _privateConstructorUsedError;
@@ -57,7 +57,7 @@ abstract class $AuthUserModelCopyWith<$Res> {
       List<String> selectedServices,
       double serviceDistance,
       String schoolName,
-      String photoURL,
+      String? photoURL,
       String? selectedGrade,
       String description,
       String zipCode,
@@ -86,7 +86,7 @@ class _$AuthUserModelCopyWithImpl<$Res, $Val extends AuthUserModel>
     Object? selectedServices = null,
     Object? serviceDistance = null,
     Object? schoolName = null,
-    Object? photoURL = null,
+    Object? photoURL = freezed,
     Object? selectedGrade = freezed,
     Object? description = null,
     Object? zipCode = null,
@@ -121,10 +121,10 @@ class _$AuthUserModelCopyWithImpl<$Res, $Val extends AuthUserModel>
           ? _value.schoolName
           : schoolName // ignore: cast_nullable_to_non_nullable
               as String,
-      photoURL: null == photoURL
+      photoURL: freezed == photoURL
           ? _value.photoURL
           : photoURL // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       selectedGrade: freezed == selectedGrade
           ? _value.selectedGrade
           : selectedGrade // ignore: cast_nullable_to_non_nullable
@@ -161,7 +161,7 @@ abstract class _$$AuthUserModelImplCopyWith<$Res>
       List<String> selectedServices,
       double serviceDistance,
       String schoolName,
-      String photoURL,
+      String? photoURL,
       String? selectedGrade,
       String description,
       String zipCode,
@@ -188,7 +188,7 @@ class __$$AuthUserModelImplCopyWithImpl<$Res>
     Object? selectedServices = null,
     Object? serviceDistance = null,
     Object? schoolName = null,
-    Object? photoURL = null,
+    Object? photoURL = freezed,
     Object? selectedGrade = freezed,
     Object? description = null,
     Object? zipCode = null,
@@ -223,10 +223,10 @@ class __$$AuthUserModelImplCopyWithImpl<$Res>
           ? _value.schoolName
           : schoolName // ignore: cast_nullable_to_non_nullable
               as String,
-      photoURL: null == photoURL
+      photoURL: freezed == photoURL
           ? _value.photoURL
           : photoURL // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       selectedGrade: freezed == selectedGrade
           ? _value.selectedGrade
           : selectedGrade // ignore: cast_nullable_to_non_nullable
@@ -260,7 +260,7 @@ class _$AuthUserModelImpl
       required final List<String> selectedServices,
       required this.serviceDistance,
       required this.schoolName,
-      required this.photoURL,
+      this.photoURL,
       this.selectedGrade,
       required this.description,
       required this.zipCode,
@@ -292,7 +292,7 @@ class _$AuthUserModelImpl
   @override
   final String schoolName;
   @override
-  final String photoURL;
+  final String? photoURL;
   @override
   final String? selectedGrade;
   @override
@@ -397,7 +397,7 @@ abstract class _AuthUserModel implements AuthUserModel {
       required final List<String> selectedServices,
       required final double serviceDistance,
       required final String schoolName,
-      required final String photoURL,
+      final String? photoURL,
       final String? selectedGrade,
       required final String description,
       required final String zipCode,
@@ -421,7 +421,7 @@ abstract class _AuthUserModel implements AuthUserModel {
   @override
   String get schoolName;
   @override
-  String get photoURL;
+  String? get photoURL;
   @override
   String? get selectedGrade;
   @override

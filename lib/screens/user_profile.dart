@@ -8,8 +8,6 @@ import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hsmowers_app/providers/user_info_provider.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -54,7 +52,7 @@ class _UserProfileState extends State<UserProfile> {
   Future<void> _getCurrentUser() async {
     User? user = FirebaseAuth.instance.currentUser;
     setState(() {
-      currentUser = user; // Store the user in state
+      currentUser = user;
     });
 
     if (user != null) {
@@ -203,7 +201,7 @@ class _UserProfileState extends State<UserProfile> {
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
-                    Center(
+                    const Center(
                         // child: CircleAvatar(
                         //   maxRadius: 60,
                         //   backgroundImage: photoURL != null

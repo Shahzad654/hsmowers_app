@@ -17,7 +17,7 @@ _$AuthUserModelImpl _$$AuthUserModelImplFromJson(Map<String, dynamic> json) =>
           .toList(),
       serviceDistance: (json['serviceDistance'] as num).toDouble(),
       schoolName: json['schoolName'] as String,
-      photoURL: json['photoURL'] as String,
+      photoURL: json['photoURL'] as String?,
       selectedGrade: json['selectedGrade'] as String?,
       description: json['description'] as String,
       zipCode: json['zipCode'] as String,

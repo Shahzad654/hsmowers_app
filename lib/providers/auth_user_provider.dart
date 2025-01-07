@@ -2,7 +2,6 @@
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:hsmowers_app/models/auth_user_model.dart';
-import 'dart:io';
 part 'auth_user_provider.g.dart';
 
 @riverpod

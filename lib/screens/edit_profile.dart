@@ -1,28 +1,26 @@
-// ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, curly_braces_in_flow_control_structures
+// ignore_for_file: prefer_const_constructors, avoid_print
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hsmowers_app/providers/user_info_provider.dart';
+import 'package:hsmowers_app/models/auth_user_model.dart'; // Assuming authModel is here
 import 'package:hsmowers_app/screens/auth.dart';
-import 'package:hsmowers_app/screens/home.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hsmowers_app/screens/signup.dart';
 import 'package:hsmowers_app/theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:hsmowers_app/utils/code_to_latlang.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:convert';
 
-class EditProfile extends StatefulWidget {
+class EditProfile extends ConsumerStatefulWidget {
+  const EditProfile({super.key});
+
   @override
-  State<EditProfile> createState() => _EditProfileState();
+  ConsumerState<EditProfile> createState() => _EditProfileState();
 }
 
-class _EditProfileState extends State<EditProfile> {
+class _EditProfileState extends ConsumerState<EditProfile> {
   final _formKey = GlobalKey<FormState>();
   int currentStep = 0;
 
@@ -57,29 +55,20 @@ class _EditProfileState extends State<EditProfile> {
 
   Future<void> _loadUserData() async {
     try {
-      String userId = FirebaseAuth.instance.currentUser!.uid;
+      final authModel = ref.read(authUserProvider);
+      fullNameController.text = authModel.fullName ?? '';
+      userNameController.text = authModel.userName ?? '';
+      phoneNumController.text = authModel.phoneNumber ?? '';
+      schoolNameController.text = authModel.schoolName ?? '';
+      descriptionController.text = authModel.description ?? '';
+      addressCodeController.text = authModel.zipCode ?? '';
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('userInfo')
-          .doc(userId)
-          .get();
-
-      if (userDoc.exists) {
-        var userData = userDoc.data() as Map<String, dynamic>;
-        fullNameController.text = userData['displayName'] ?? '';
-        userNameController.text = userData['userName'] ?? '';
-        phoneNumController.text = userData['phoneNumber'] ?? '';
-        schoolNameController.text = userData['schoolName'] ?? '';
-        descriptionController.text = userData['description'] ?? '';
-        addressCodeController.text = userData['zipCode'] ?? '';
-
-        setState(() {
-          selectedServices = List<String>.from(userData['services'] ?? []);
-          serviceDistance = userData['serviceDistance'] ?? 0.0;
-          // selectedGrade = userData['grade'];
-        });
-        String? photoURL = userData['photoURL'];
-      }
+      setState(() {
+        selectedServices = List<String>.from(authModel.selectedServices ?? []);
+        serviceDistance = authModel.serviceDistance ?? 0.0;
+        selectedGrade = authModel.selectedGrade;
+        photoURL = authModel.photoURL;
+      });
     } catch (e) {
       print("Error loading user data: $e");
     }
@@ -114,7 +103,7 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
-  void nextStep(BuildContext context, WidgetRef ref) {
+  void nextStep(BuildContext context) {
     if (!validateCurrentStep()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -131,7 +120,7 @@ class _EditProfileState extends State<EditProfile> {
       submitForm(context);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => AuthScreen()),
       );
     }
   }
@@ -193,6 +182,23 @@ class _EditProfileState extends State<EditProfile> {
           .doc(userId)
           .update(formData);
 
+      ref.read(authUserProvider.notifier).updateUser(
+            AuthUserModel(
+              uid: userId,
+              fullName: fullNameController.text,
+              userName: userNameController.text,
+              phoneNumber: phoneNumController.text,
+              selectedServices: selectedServices,
+              serviceDistance: serviceDistance,
+              schoolName: schoolNameController.text,
+              selectedGrade: selectedGrade,
+              description: descriptionController.text,
+              zipCode: addressCode,
+              photoURL: imageUrl,
+              isLoggedIn: true,
+            ),
+          );
+
       print('User info updated successfully');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -215,47 +221,37 @@ class _EditProfileState extends State<EditProfile> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, WidgetRef ref, Widget? child) {
-        final userInfo = ref.watch(userInfoProvider);
-        print(userInfo);
-
-        return SafeArea(
-          child: Scaffold(
-            appBar: AppBar(
-              backgroundColor: AppColors.primary,
-              title: Text(
-                'Edit Profile',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        title: Text(
+          'Edit Profile',
+          style: TextStyle(color: Colors.white, fontSize: 20),
+        ),
+        centerTitle: true,
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Edit your business profile',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              centerTitle: true,
-            ),
-            body: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Edit your business profile',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 30),
-                    _buildCurrentStep(),
-                    SizedBox(height: 30),
-                    _buildNavigationButtons(context, ref),
-                    SizedBox(height: 20),
-                    _buildProgressIndicator(),
-                  ],
-                ),
-              ),
-            ),
+              SizedBox(height: 30),
+              _buildCurrentStep(),
+              SizedBox(height: 30),
+              _buildNavigationButtons(context),
+              SizedBox(height: 20),
+              _buildProgressIndicator(),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -295,7 +291,7 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
-  Widget _buildNavigationButtons(BuildContext context, WidgetRef ref) {
+  Widget _buildNavigationButtons(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -310,7 +306,7 @@ class _EditProfileState extends State<EditProfile> {
           ),
         if (currentStep > 0) SizedBox(width: 20),
         ElevatedButton(
-          onPressed: () => nextStep(context, ref),
+          onPressed: () => nextStep(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryDark,
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -339,6 +335,7 @@ class Step1Widget extends StatelessWidget {
   final TextEditingController phoneNumController;
 
   const Step1Widget({
+    super.key,
     required this.fullNameController,
     required this.userNameController,
     required this.phoneNumController,
@@ -387,6 +384,7 @@ class Step2Widget extends StatefulWidget {
   final double initialDistance;
 
   const Step2Widget({
+    super.key,
     required this.onServicesChanged,
     required this.onDistanceChanged,
     required this.initialServices,
@@ -483,6 +481,7 @@ class Step3Widget extends StatelessWidget {
   final String? photoURL;
 
   const Step3Widget({
+    super.key,
     required this.schoolNameController,
     required this.onGradeChanged,
     required this.onImageSelected,
@@ -561,6 +560,7 @@ class Step4Widget extends StatelessWidget {
   final TextEditingController addressCodeController;
 
   const Step4Widget({
+    super.key,
     required this.descriptionController,
     required this.addressCodeController,
   });
@@ -583,8 +583,9 @@ class Step4Widget extends StatelessWidget {
           keyboardType: TextInputType.text,
           validator: (value) {
             if (value?.isEmpty ?? true) return 'Please enter zip code';
-            if (value!.length != 5 || value == '')
+            if (value!.length != 5 || value == '') {
               return 'Please enter a valid zip code';
+            }
             return null;
           },
         ),
@@ -602,6 +603,7 @@ class CustomTextField extends StatelessWidget {
   final int? maxLines;
 
   const CustomTextField({
+    super.key,
     required this.controller,
     required this.label,
     this.validator,

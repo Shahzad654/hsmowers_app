@@ -2,15 +2,14 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:hsmowers_app/models/auth_user_model.dart';
 import 'package:hsmowers_app/screens/auth.dart';
-import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/widgets/google_maps.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hsmowers_app/providers/user_info_provider.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -69,6 +68,26 @@ class _LoginState extends State<Login> {
       if (userSnapshot.exists) {
         var userData = userSnapshot.data() as Map<String, dynamic>;
         await storeUserDataInPreferences(userData);
+
+        ref.read(authUserProvider.notifier).updateUser(
+              AuthUserModel(
+                uid: userCredential.user!.uid,
+                fullName: userData['displayName'],
+                userName: userData['userName'],
+                phoneNumber: userData['phoneNumber'],
+                selectedServices: List<String>.from(userData['services']),
+                serviceDistance: userData['serviceDistance'],
+                schoolName: userData['schoolName'],
+                photoURL: userData['photoURL'],
+                selectedGrade: userData['grade'],
+                description: userData['description'],
+                zipCode: userData['zipCode'],
+                isLoggedIn: true,
+              ),
+            );
+
+        ref.read(authUserProvider.notifier).loadUserData();
+
         if (userData['serviceArea'] != null &&
             userData['serviceArea'] is Map &&
             userData['serviceArea']['path'] != null &&

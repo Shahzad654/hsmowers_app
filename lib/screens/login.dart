@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, use_build_context_synchronously
+// ignore_for_file: prefer_const_constructors, use_build_context_synchronously, avoid_print
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -10,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -24,10 +25,12 @@ class _LoginState extends State<Login> {
   final TextEditingController _resetEmailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   void initState() {
     super.initState();
+    GoogleSignIn().signOut();
   }
 
   Future<void> storeUserDataInPreferences(Map<String, dynamic> userData) async {
@@ -117,6 +120,97 @@ class _LoginState extends State<Login> {
     } finally {
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<String?> signInWithGoogle(WidgetRef ref) async {
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+      );
+
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        return 'Google Sign-In cancelled.';
+      }
+
+      print('Google User: ${googleUser.email}');
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      print('Google Auth: ${googleAuth.idToken}');
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      print('Firebase User: ${userCredential.user?.uid}');
+
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('userInfo')
+          .doc(userCredential.user?.uid)
+          .get();
+
+      if (userSnapshot.exists) {
+        var userData = userSnapshot.data() as Map<String, dynamic>;
+        await storeUserDataInPreferences(userData);
+
+        ref.read(authUserProvider.notifier).updateUser(
+              AuthUserModel(
+                uid: userCredential.user!.uid,
+                fullName: userData['displayName'],
+                userName: userData['userName'],
+                phoneNumber: userData['phoneNumber'],
+                selectedServices: List<String>.from(userData['services']),
+                serviceDistance: userData['serviceDistance'],
+                schoolName: userData['schoolName'],
+                photoURL: userData['photoURL'],
+                selectedGrade: userData['grade'],
+                description: userData['description'],
+                zipCode: userData['zipCode'],
+                isLoggedIn: true,
+              ),
+            );
+
+        ref.read(authUserProvider.notifier).loadUserData();
+
+        if (userData['serviceArea'] != null &&
+            userData['serviceArea'] is Map &&
+            userData['serviceArea']['path'] != null &&
+            userData['serviceArea']['path'] is List &&
+            (userData['serviceArea']['path'] as List).isNotEmpty) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const ProfileScreen(),
+            ),
+          );
+          return 'Successfully Logged In';
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const GoogleMaps(),
+            ),
+          );
+          return 'Success-maps';
+        }
+      } else {
+        return 'User data not found.';
+      }
+    } catch (e) {
+      print('Google Sign-In Error: $e');
+      return 'Unable to sign in with Google. Please try again later.';
+    } finally {
+      setState(() {
+        _isGoogleLoading = false;
       });
     }
   }
@@ -332,6 +426,37 @@ class _LoginState extends State<Login> {
                         style: AppTextStyles.h5.copyWith(
                           decoration: TextDecoration.underline,
                         ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () async {
+                        final message = await signInWithGoogle(ref);
+                        if (message != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(message),
+                              backgroundColor:
+                                  message.contains('Successfully Logged In')
+                                      ? Colors.green
+                                      : Colors.red,
+                              duration: const Duration(seconds: 3),
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.only(
+                                  top: 10, left: 10, right: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              action: SnackBarAction(
+                                label: 'Dismiss',
+                                textColor: Colors.white,
+                                onPressed: () {},
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: Image(
+                        image: AssetImage('images/continuewithgoogle.png'),
                       ),
                     ),
                   ],

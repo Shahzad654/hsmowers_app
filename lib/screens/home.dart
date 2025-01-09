@@ -30,6 +30,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _loading = true;
   List<Map<String, dynamic>> userData = [];
   String? enteredZipCode;
+  String? initialZipCode;
 
   @override
   void initState() {
@@ -133,29 +134,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    List<Location> locations =
-        await locationFromAddress('Your current location');
+    try {
+      double latitude = 39.9566;
+      double longitude = -85.9668;
 
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-        locations.first.latitude, locations.first.longitude);
-    Placemark place = placemarks.first;
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(latitude, longitude);
+      if (placemarks.isEmpty) {
+        print("No placemarks found");
+        return;
+      }
 
-    String zipCode = place.postalCode ?? 'No Zip Code Available';
+      Placemark place = placemarks.first;
+      String zipCode = place.postalCode ?? 'No Zip Code Available';
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('latitude', locations.first.latitude);
-    await prefs.setDouble('longitude', locations.first.longitude);
-    await prefs.setString('zipCode', zipCode);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('latitude', latitude);
+      await prefs.setDouble('longitude', longitude);
+      await prefs.setString('zipCode', zipCode);
 
-    setState(() {
-      print(
-          'User Location: Latitude: ${locations.first.latitude}, Longitude: ${locations.first.longitude}, Zip Code: $zipCode');
-    });
+      setState(() {
+        print(
+            'User Location: Latitude: $latitude, Longitude: $longitude, Zip Code: $zipCode');
+      });
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => FindMowers()),
-    );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => FindMowers(initialZipCode: zipCode)),
+      );
+    } catch (e) {
+      print('Error getting location: $e');
+    }
   }
 
   @override

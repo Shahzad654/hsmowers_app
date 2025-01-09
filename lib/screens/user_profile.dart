@@ -1,7 +1,8 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, avoid_print, use_build_context_synchronously
 
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,20 +28,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _getUserData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshUserData();
+    });
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   _refreshUserData();
+  // }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _getUserData();
+  // @override
+  // void dispose() {
+  //   WidgetsBinding.instance.removeObserver(this);
+  //   super.dispose();
+  // }
+
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     _refreshUserData();
+  //   }
+  // }
+
+  Future<void> _refreshUserData() async {
+    await _getUserData();
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('userInfo')
+          .doc(userId)
+          .get();
+
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        print('fetched user data is: $userData');
+        final updatedUser =
+            AuthUserModel.fromJson({...userData, 'uid': userId});
+        print('updated user data is: $updatedUser');
+        ref.read(authUserProvider.notifier).updateUser(updatedUser);
+        setState(() {});
+      }
     }
   }
 
@@ -91,9 +121,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget build(BuildContext context) {
     final authUser = ref.watch(authUserProvider);
     print('ProfileScreen - Auth User State: ${authUser.toJson()}');
+    final shouldRefresh = ModalRoute.of(context)?.settings.arguments as bool?;
+
+    if (shouldRefresh == true) {
+      _refreshUserData();
+    }
 
     const String weedingIcon = 'images/weeding.svg';
-    const String mowersIcon = 'images/mowers.svg';
+    const String mowersIcon = 'images/lawnmower.svg';
     const String leafremovalIcon = 'images/leafremoval.svg';
     const String dogwalkingIcon = 'images/dogwalking.svg';
     const String edgingIcon = 'images/edging.svg';
@@ -117,110 +152,117 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         ],
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage:
-                    authUser.photoURL != null && authUser.photoURL!.isNotEmpty
-                        ? NetworkImage(authUser.photoURL!) as ImageProvider
-                        : const AssetImage('assets/default_avatar.png'),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                authUser.fullName,
-                style: AppTextStyles.h3.copyWith(color: Colors.black),
-              ),
-              Text(
-                authUser.userName,
-                style: AppTextStyles.h5.copyWith(color: Colors.black),
-              ),
-              Text(
-                {
-                      '9': 'Freshman',
-                      '10': 'Sophomore',
-                      '11': 'Junior',
-                      '12': 'Senior',
-                    }[authUser.selectedGrade] ??
-                    'No Grade',
-                style: AppTextStyles.h6.copyWith(color: Colors.black),
-              ),
-              Text(
-                authUser.description,
-                style: AppTextStyles.h5.copyWith(color: Colors.black),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                    AppColors.secondaryDark,
-                  ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _refreshUserData();
+        },
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage:
+                      authUser.photoURL != null && authUser.photoURL!.isNotEmpty
+                          ? NetworkImage(authUser.photoURL!) as ImageProvider
+                          : const AssetImage('assets/default_avatar.png'),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditProfile(),
+                const SizedBox(height: 20),
+                Text(
+                  authUser.fullName,
+                  style: AppTextStyles.h3.copyWith(color: Colors.black),
+                ),
+                Text(
+                  authUser.userName,
+                  style: AppTextStyles.h5.copyWith(color: Colors.black),
+                ),
+                Text(
+                  {
+                        '9': 'Freshman',
+                        '10': 'Sophomore',
+                        '11': 'Junior',
+                        '12': 'Senior',
+                      }[authUser.selectedGrade] ??
+                      'No Grade',
+                  style: AppTextStyles.h6.copyWith(color: Colors.black),
+                ),
+                Text(
+                  authUser.description,
+                  style: AppTextStyles.h5.copyWith(color: Colors.black),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      AppColors.secondaryDark,
                     ),
-                  );
-                },
-                child: const Text(
-                  'Edit Profile',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 40),
-              Text(
-                'Service Area',
-                style: AppTextStyles.h4,
-              ),
-              const SizedBox(height: 20),
-              if (staticMapUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Image.network(staticMapUrl!),
+                  ),
+                  onPressed: () async {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProfile(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Edit Profile',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
-              const SizedBox(height: 40),
-              Text(
-                'Services',
-                style: AppTextStyles.h4.copyWith(color: Colors.black),
-              ),
-              const SizedBox(height: 20),
-              if (authUser.selectedServices.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 15,
-                    runSpacing: 15,
-                    children: [
-                      if (authUser.selectedServices.contains('weeding'))
-                        buildServiceIcon(weedingIcon, 'Weeding'),
-                      if (authUser.selectedServices.contains('mowing'))
-                        buildServiceIcon(mowersIcon, 'Mowing'),
-                      if (authUser.selectedServices.contains('edging'))
-                        buildServiceIcon(edgingIcon, 'Edging'),
-                      if (authUser.selectedServices.contains('window-cleaning'))
-                        buildServiceIcon(windowcleaningIcon, 'Window Cleaning'),
-                      if (authUser.selectedServices.contains('snow-removal'))
-                        buildServiceIcon(snowremovalIcon, 'Snow Removal'),
-                      if (authUser.selectedServices.contains('baby-sitting'))
-                        buildServiceIcon(babysittingIcon, 'Baby Sitting'),
-                      if (authUser.selectedServices.contains('leaf-removal'))
-                        buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
-                      if (authUser.selectedServices.contains('dog-walking'))
-                        buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
-                    ],
-                  ),
+                const SizedBox(height: 40),
+                Text(
+                  'Service Area',
+                  style: AppTextStyles.h4,
                 ),
-            ],
+                const SizedBox(height: 20),
+                if (staticMapUrl != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.network(staticMapUrl!),
+                    ),
+                  ),
+                const SizedBox(height: 40),
+                Text(
+                  'Services',
+                  style: AppTextStyles.h4.copyWith(color: Colors.black),
+                ),
+                const SizedBox(height: 20),
+                if (authUser.selectedServices.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 15,
+                      runSpacing: 15,
+                      children: [
+                        if (authUser.selectedServices.contains('weeding'))
+                          buildServiceIcon(weedingIcon, 'Weeding'),
+                        if (authUser.selectedServices.contains('mowing'))
+                          buildServiceIcon(mowersIcon, 'Mowing'),
+                        if (authUser.selectedServices.contains('edging'))
+                          buildServiceIcon(edgingIcon, 'Edging'),
+                        if (authUser.selectedServices
+                            .contains('window-cleaning'))
+                          buildServiceIcon(
+                              windowcleaningIcon, 'Window Cleaning'),
+                        if (authUser.selectedServices.contains('snow-removal'))
+                          buildServiceIcon(snowremovalIcon, 'Snow Removal'),
+                        if (authUser.selectedServices.contains('baby-sitting'))
+                          buildServiceIcon(babysittingIcon, 'Baby Sitting'),
+                        if (authUser.selectedServices.contains('leaf-removal'))
+                          buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
+                        if (authUser.selectedServices.contains('dog-walking'))
+                          buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -231,16 +273,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return Column(
       children: [
         Container(
-          height: 50,
-          width: 50,
+          height: 60,
+          width: 60,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(50),
             color: AppColors.primary,
           ),
           child: SvgPicture.asset(
             iconPath,
-            width: 40,
-            height: 40,
+            width: 35,
+            height: 35,
           ),
         ),
         Text(label),

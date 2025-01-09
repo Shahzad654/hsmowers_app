@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hsmowers_app/models/auth_user_model.dart'; // Assuming authModel is here
+import 'package:hsmowers_app/models/auth_user_model.dart';
 import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,6 +23,7 @@ class EditProfile extends ConsumerStatefulWidget {
 class _EditProfileState extends ConsumerState<EditProfile> {
   final _formKey = GlobalKey<FormState>();
   int currentStep = 0;
+  bool _isLoading = false;
 
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController userNameController = TextEditingController();
@@ -103,7 +104,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
     }
   }
 
-  void nextStep(BuildContext context) {
+  void nextStep(BuildContext context) async {
     if (!validateCurrentStep()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -117,11 +118,14 @@ class _EditProfileState extends ConsumerState<EditProfile> {
     if (currentStep < 3) {
       setState(() => currentStep++);
     } else {
-      submitForm(context);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ProfileScreen()),
-      );
+      // submitForm(context);
+      setState(() {
+        _isLoading = true;
+      });
+      await submitForm(context);
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -131,7 +135,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
     }
   }
 
-  void submitForm(BuildContext context) async {
+  Future<void> submitForm(BuildContext context) async {
     print("submitForm called");
     if (!_formKey.currentState!.validate()) return;
 
@@ -157,6 +161,9 @@ class _EditProfileState extends ConsumerState<EditProfile> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to upload profile image: $e')),
           );
+          setState(() {
+            _isLoading = false;
+          });
           return;
         }
       }
@@ -200,6 +207,8 @@ class _EditProfileState extends ConsumerState<EditProfile> {
             ),
           );
 
+      setState(() {});
+
       print('User info updated successfully');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -209,20 +218,20 @@ class _EditProfileState extends ConsumerState<EditProfile> {
           ),
         );
       });
-      ;
-
-      await Future.delayed(Duration(seconds: 1));
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (context) => ProfileScreen(key: UniqueKey())),
+        MaterialPageRoute(builder: (context) => ProfileScreen()),
       );
     } catch (e) {
       print('Error during geocoding or update: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update user profile: $e')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -304,7 +313,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
       children: [
         if (currentStep > 0)
           ElevatedButton(
-            onPressed: previousStep,
+            onPressed: _isLoading ? null : previousStep,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryDark,
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -313,15 +322,24 @@ class _EditProfileState extends ConsumerState<EditProfile> {
           ),
         if (currentStep > 0) SizedBox(width: 20),
         ElevatedButton(
-          onPressed: () => nextStep(context),
+          onPressed: _isLoading ? null : () => nextStep(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryDark,
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           ),
-          child: Icon(
-            currentStep < 3 ? Icons.arrow_forward : Icons.check,
-            color: Colors.white,
-          ),
+          child: _isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryDark,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Icon(
+                  currentStep < 3 ? Icons.arrow_forward : Icons.check,
+                  color: Colors.white,
+                ),
         ),
       ],
     );

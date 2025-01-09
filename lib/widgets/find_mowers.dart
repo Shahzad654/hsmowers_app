@@ -8,7 +8,9 @@ import 'package:hsmowers_app/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FindMowers extends StatefulWidget {
-  const FindMowers({super.key});
+  final String? initialZipCode;
+
+  const FindMowers({super.key, this.initialZipCode});
 
   @override
   State<FindMowers> createState() => _FindMowersState();
@@ -30,6 +32,10 @@ class _FindMowersState extends State<FindMowers> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialZipCode != null) {
+      enteredZipCode = widget.initialZipCode;
+      getCords();
+    }
   }
 
   Future<void> getCords() async {

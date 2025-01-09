@@ -21,7 +21,7 @@ class _OtherUsersState extends State<OtherUsers> {
   String? staticMapUrl;
 
   String weedingIcon = 'images/weeding.svg';
-  String mowersIcon = 'images/mowers.svg';
+  String mowersIcon = 'images/lawnmower.svg';
   String leafremovalIcon = 'images/leafremoval.svg';
   String dogwalkingIcon = 'images/dogwalking.svg';
   String edgingIcon = 'images/edging.svg';

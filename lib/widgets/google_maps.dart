@@ -2,27 +2,29 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hsmowers_app/models/auth_user_model.dart'; // Import your AuthUserModel
 import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
-class GoogleMaps extends StatefulWidget {
+class GoogleMaps extends ConsumerStatefulWidget {
+  // Change to ConsumerStatefulWidget
   const GoogleMaps({super.key});
 
   @override
-  State<GoogleMaps> createState() => _GoogleMapsState();
+  ConsumerState<GoogleMaps> createState() => _GoogleMapsState();
 }
 
-class _GoogleMapsState extends State<GoogleMaps> {
+class _GoogleMapsState extends ConsumerState<GoogleMaps> {
   static final CameraPosition _kGooglePlex =
       CameraPosition(target: LatLng(32.18117, 74.18513), zoom: 14);
   Completer<GoogleMapController> _controller = Completer();
 
-  List<Marker> _marker = [];
-  Set<Polyline> _polylines = <Polyline>{};
+  Set<Polyline> _polylines = <Polyline>{}; // Removed unused _marker list
   List<LatLng> _polylinePoints = [];
 
   late double _latitude;
@@ -69,7 +71,8 @@ class _GoogleMapsState extends State<GoogleMaps> {
     });
   }
 
-  void _finishDrawing() async {
+  void _finishDrawing(WidgetRef ref) async {
+    // Accept ref as a parameter
     if (_polylinePoints.isNotEmpty) {
       List<Map<String, double>> polygonCoordinates =
           _polylinePoints.map((point) {
@@ -81,7 +84,7 @@ class _GoogleMapsState extends State<GoogleMaps> {
 
       try {
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? uid = prefs.getString('uid');
+        final uid = ref.read(authUserProvider)?.uid; // Access uid from Riverpod
 
         if (uid != null) {
           await FirebaseFirestore.instance
@@ -99,7 +102,7 @@ class _GoogleMapsState extends State<GoogleMaps> {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => ProfileScreen()));
         } else {
-          print('Email not found in shared preferences.');
+          print('UID not found in Riverpod.');
         }
       } catch (e) {
         print('Error saving polygon: $e');
@@ -122,7 +125,7 @@ class _GoogleMapsState extends State<GoogleMaps> {
               Icons.check,
               color: Colors.white,
             ),
-            onPressed: _finishDrawing,
+            onPressed: () => _finishDrawing(ref), // Pass ref here
           ),
         ],
       ),

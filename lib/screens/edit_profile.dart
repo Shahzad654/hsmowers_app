@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, avoid_print
+// ignore_for_file: prefer_const_constructors, avoid_print, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -132,6 +132,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
   }
 
   void submitForm(BuildContext context) async {
+    print("submitForm called");
     if (!_formKey.currentState!.validate()) return;
 
     final addressCode = addressCodeController.text.trim();
@@ -200,16 +201,22 @@ class _EditProfileState extends ConsumerState<EditProfile> {
           );
 
       print('User info updated successfully');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Profile updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      });
+      ;
+
+      await Future.delayed(Duration(seconds: 1));
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileScreen()),
+        MaterialPageRoute(
+            builder: (context) => ProfileScreen(key: UniqueKey())),
       );
     } catch (e) {
       print('Error during geocoding or update: $e');

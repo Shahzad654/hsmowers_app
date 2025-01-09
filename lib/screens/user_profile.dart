@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,9 +19,30 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
+    with WidgetsBindingObserver {
   String? serviceArea;
   String? staticMapUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _getUserData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _getUserData();
+    }
+  }
 
   Future<void> _getUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -65,15 +88,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _getUserData();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final authUser = ref.watch(authUserProvider);
-    print('Auth User State: ${authUser.isLoggedIn}');
+    print('ProfileScreen - Auth User State: ${authUser.toJson()}');
 
     const String weedingIcon = 'images/weeding.svg';
     const String mowersIcon = 'images/mowers.svg';
@@ -105,7 +122,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Profile Picture
               CircleAvatar(
                 radius: 50,
                 backgroundImage:
@@ -114,20 +130,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : const AssetImage('assets/default_avatar.png'),
               ),
               const SizedBox(height: 20),
-
-              // Full Name
               Text(
                 authUser.fullName,
                 style: AppTextStyles.h3.copyWith(color: Colors.black),
               ),
-
-              // Username
               Text(
                 authUser.userName,
                 style: AppTextStyles.h5.copyWith(color: Colors.black),
               ),
-
-              // Grade
               Text(
                 {
                       '9': 'Freshman',
@@ -138,15 +148,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     'No Grade',
                 style: AppTextStyles.h6.copyWith(color: Colors.black),
               ),
-
-              // Description
               Text(
                 authUser.description,
                 style: AppTextStyles.h5.copyWith(color: Colors.black),
+                textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 20),
-
               ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(
@@ -166,9 +173,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-
               const SizedBox(height: 40),
-
+              Text(
+                'Service Area',
+                style: AppTextStyles.h4,
+              ),
+              const SizedBox(height: 20),
               if (staticMapUrl != null)
                 Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20),
@@ -177,12 +187,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: Image.network(staticMapUrl!),
                   ),
                 ),
-
-              // Services Section
+              const SizedBox(height: 40),
               Text(
                 'Services',
                 style: AppTextStyles.h4.copyWith(color: Colors.black),
               ),
+              const SizedBox(height: 20),
               if (authUser.selectedServices.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(8.0),

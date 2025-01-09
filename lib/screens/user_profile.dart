@@ -1,95 +1,36 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hsmowers_app/models/auth_user_model.dart';
 import 'package:hsmowers_app/screens/edit_profile.dart';
-import 'package:hsmowers_app/screens/home.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-class UserProfile extends StatefulWidget {
-  const UserProfile({super.key});
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  State<UserProfile> createState() => _UserProfileState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _UserProfileState extends State<UserProfile> {
-  int _currentIndex = 1;
-  String? photoURL;
-  String? displayName;
-  String? userName;
-  String? phoneNum;
-  String? schoolName;
-  String? grade;
-  String? description;
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String? serviceArea;
-  String? services;
-  String? serviceDistance;
-  bool? isAuth;
   String? staticMapUrl;
-  bool isLoading = true;
-  String weedingIcon = 'images/weeding.svg';
-  String mowersIcon = 'images/mowers.svg';
-  String leafremovalIcon = 'images/leafremoval.svg';
-  String dogwalkingIcon = 'images/dogwalking.svg';
-  String egdingIcon = 'images/edging.svg';
-  String snowremovalIcon = 'images/snowremoval.svg';
-  String babysittingIcon = 'images/babysitting.svg';
-  String windowcleaningIcon = 'images/windowcleaning.svg';
-  User? currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _getPhotoURL();
-    _getUserData();
-    _getCurrentUser();
-  }
-
-  Future<void> _getCurrentUser() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    setState(() {
-      currentUser = user;
-    });
-
-    if (user != null) {
-      print('Current User ID: ${user.uid}');
-      print('Current User Email: ${user.email}');
-      print('Current User Display Name: ${user.displayName}');
-      print('Current User Photo URL: ${user.photoURL}');
-    } else {
-      print('No user currently signed in');
-    }
-  }
-
-  Future<void> _getPhotoURL() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedPhotoURL = prefs.getString('photoURL');
-    setState(() {
-      photoURL = storedPhotoURL;
-    });
-  }
 
   Future<void> _getUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedDisplayName = prefs.getString('displayName');
-    String? storedUserName = prefs.getString('userName');
-    String? storedPhoneNum = prefs.getString('phoneNum');
-    String? storedDescription = prefs.getString('description');
-    String? storedGrade = prefs.getString('grade');
     String? storedServiceArea = prefs.getString('serviceArea');
-    String? storedServices = prefs.getString('services');
-    String? stroedServiceDistance = prefs.getString('serviceDistance');
-    String? storedSchoolname = prefs.getString('schoolName');
-    bool? storedAuth = prefs.getBool('isLoggedIn');
+    print(storedServiceArea);
 
     List<dynamic>? decodedServiceArea;
     if (storedServiceArea != null) {
       try {
         decodedServiceArea = jsonDecode(storedServiceArea);
+
         if (decodedServiceArea != null && decodedServiceArea.isNotEmpty) {
           _generateStaticMapUrl(decodedServiceArea);
         }
@@ -98,22 +39,7 @@ class _UserProfileState extends State<UserProfile> {
       }
     }
 
-    List<dynamic>? decodedServices;
-    if (storedServices != null) {
-      try {
-        decodedServices = jsonDecode(storedServices);
-      } catch (e) {
-        print("Error decoding services: $e");
-      }
-    }
-
     setState(() {
-      displayName = storedDisplayName;
-      userName = storedUserName;
-      phoneNum = storedPhoneNum;
-      description = storedDescription;
-      grade = storedGrade;
-      isAuth = storedAuth;
       if (decodedServiceArea != null && decodedServiceArea.isNotEmpty) {
         serviceArea = decodedServiceArea
             .map((coord) => '${coord["lat"]}, ${coord["lng"]}')
@@ -121,11 +47,7 @@ class _UserProfileState extends State<UserProfile> {
       } else {
         serviceArea = 'No service area';
       }
-      services = decodedServices?.join(', ') ?? 'No services';
-      serviceDistance = stroedServiceDistance;
-      schoolName = storedSchoolname;
-
-      isLoading = false;
+      print(serviceArea);
     });
   }
 
@@ -143,230 +65,176 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _getUserData();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          actions: [
-            PopupMenuButton(
-                icon: const Icon(
-                  Icons.more_vert,
-                  size: 35,
+    final authUser = ref.watch(authUserProvider);
+    print('Auth User State: ${authUser.isLoggedIn}');
+
+    const String weedingIcon = 'images/weeding.svg';
+    const String mowersIcon = 'images/mowers.svg';
+    const String leafremovalIcon = 'images/leafremoval.svg';
+    const String dogwalkingIcon = 'images/dogwalking.svg';
+    const String edgingIcon = 'images/edging.svg';
+    const String snowremovalIcon = 'images/snowremoval.svg';
+    const String babysittingIcon = 'images/babysitting.svg';
+    const String windowcleaningIcon = 'images/windowcleaning.svg';
+
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              ref.read(authUserProvider.notifier).clearUser();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const Login()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Profile Picture
+              CircleAvatar(
+                radius: 50,
+                backgroundImage:
+                    authUser.photoURL != null && authUser.photoURL!.isNotEmpty
+                        ? NetworkImage(authUser.photoURL!) as ImageProvider
+                        : const AssetImage('assets/default_avatar.png'),
+              ),
+              const SizedBox(height: 20),
+
+              // Full Name
+              Text(
+                authUser.fullName,
+                style: AppTextStyles.h3.copyWith(color: Colors.black),
+              ),
+
+              // Username
+              Text(
+                authUser.userName,
+                style: AppTextStyles.h5.copyWith(color: Colors.black),
+              ),
+
+              // Grade
+              Text(
+                {
+                      '9': 'Freshman',
+                      '10': 'Sophomore',
+                      '11': 'Junior',
+                      '12': 'Senior',
+                    }[authUser.selectedGrade] ??
+                    'No Grade',
+                style: AppTextStyles.h6.copyWith(color: Colors.black),
+              ),
+
+              // Description
+              Text(
+                authUser.description,
+                style: AppTextStyles.h5.copyWith(color: Colors.black),
+              ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(
+                    AppColors.secondaryDark,
+                  ),
                 ),
-                itemBuilder: (context) => [
-                      PopupMenuItem(
-                          onTap: () async {
-                            try {
-                              await FirebaseAuth.instance.signOut();
-                              SharedPreferences prefs =
-                                  await SharedPreferences.getInstance();
-                              await prefs.setBool('isLoggedIn', false);
-                              await prefs.remove('userName');
-                              await prefs.remove('email');
-                              await prefs.remove('photoURL');
-                              await prefs.remove('uid');
-                              await prefs.remove('displayName');
-                              await prefs.remove('grade');
-                              await prefs.remove('description');
-                              await prefs.remove('serviceArea');
-                              await prefs.remove('services');
-
-                              setState(() {
-                                isAuth = false;
-                              });
-
-                              Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const Login()));
-                            } catch (e) {
-                              print("Error during logout: $e");
-                            }
-                          },
-                          value: 1,
-                          child: Text(
-                            ('Logout'),
-                            style:
-                                AppTextStyles.h5.copyWith(color: Colors.black),
-                          ))
-                    ]),
-          ],
-        ),
-        body: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ))
-            : SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    const Center(
-                        // child: CircleAvatar(
-                        //   maxRadius: 60,
-                        //   backgroundImage: photoURL != null
-                        //       ? NetworkImage(photoURL!)
-                        //       : const AssetImage('images/profile.jpg')
-                        //           as ImageProvider,
-                        // ),
-                        ),
-                    const SizedBox(height: 10),
-                    Center(
-                        child: Text(
-                      currentUser?.displayName ?? 'No Name',
-                      style: AppTextStyles.h3.copyWith(color: Colors.black),
-                    )),
-                    const SizedBox(height: 10),
-                    Center(
-                      child: Text(
-                        {
-                              '9': 'Freshman',
-                              '10': 'Sophomore',
-                              '11': 'Junior',
-                              '12': 'Senior',
-                            }[grade] ??
-                            'No Grade',
-                        style: AppTextStyles.h6.copyWith(color: Colors.black),
-                      ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditProfile(),
                     ),
-                    const SizedBox(height: 10),
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 350),
-                        child: Text(
-                          description ?? 'No description',
-                          textAlign: TextAlign.center,
-                          style:
-                              AppTextStyles.para.copyWith(color: Colors.black),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                            style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(
-                                    AppColors.secondaryDark)),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => EditProfile()));
-                            },
-                            child: Text(
-                              'Edit Profile',
-                              style: AppTextStyles.h5
-                                  .copyWith(color: Colors.white),
-                            )),
-                      ],
-                    ),
-                    const SizedBox(height: 50),
-                    if (staticMapUrl != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, right: 20),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.network(staticMapUrl!),
-                        ),
-                      ),
-                    const SizedBox(height: 50),
-                    Text(
-                      'Services',
-                      style: AppTextStyles.h3.copyWith(color: Colors.black),
-                    ),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 15,
-                      runSpacing: 15,
-                      children: [
-                        if (services != null && services!.contains('weeding'))
-                          buildServiceIcon(weedingIcon, 'Weeding'),
-                        if (services != null && services!.contains('mowing'))
-                          buildServiceIcon(mowersIcon, 'Mowing'),
-                        if (services != null && services!.contains('edging'))
-                          buildServiceIcon(egdingIcon, 'Edging'),
-                        if (services != null &&
-                            services!.contains('window-cleaning'))
-                          buildServiceIcon(
-                              windowcleaningIcon, 'Window Cleaning'),
-                        if (services != null &&
-                            services!.contains('snow-removal'))
-                          buildServiceIcon(snowremovalIcon, 'Snow Removal'),
-                        if (services != null &&
-                            services!.contains('baby-sitting'))
-                          buildServiceIcon(babysittingIcon, 'Baby Sitting'),
-                        if (services != null &&
-                            services!.contains('leaf-removal'))
-                          buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
-                        if (services != null &&
-                            services!.contains('dog-walking'))
-                          buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
-                      ],
-                    ),
-                  ],
+                  );
+                },
+                child: const Text(
+                  'Edit Profile',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          elevation: 10.0,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: Colors.grey,
-          type: BottomNavigationBarType.fixed,
-          iconSize: 30.0,
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-            if (index == 0) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-              );
-            } else if (index == 1) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const UserProfile()),
-              );
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
+
+              const SizedBox(height: 40),
+
+              if (staticMapUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.network(staticMapUrl!),
+                  ),
+                ),
+
+              // Services Section
+              Text(
+                'Services',
+                style: AppTextStyles.h4.copyWith(color: Colors.black),
+              ),
+              if (authUser.selectedServices.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 15,
+                    runSpacing: 15,
+                    children: [
+                      if (authUser.selectedServices.contains('weeding'))
+                        buildServiceIcon(weedingIcon, 'Weeding'),
+                      if (authUser.selectedServices.contains('mowing'))
+                        buildServiceIcon(mowersIcon, 'Mowing'),
+                      if (authUser.selectedServices.contains('edging'))
+                        buildServiceIcon(edgingIcon, 'Edging'),
+                      if (authUser.selectedServices.contains('window-cleaning'))
+                        buildServiceIcon(windowcleaningIcon, 'Window Cleaning'),
+                      if (authUser.selectedServices.contains('snow-removal'))
+                        buildServiceIcon(snowremovalIcon, 'Snow Removal'),
+                      if (authUser.selectedServices.contains('baby-sitting'))
+                        buildServiceIcon(babysittingIcon, 'Baby Sitting'),
+                      if (authUser.selectedServices.contains('leaf-removal'))
+                        buildServiceIcon(leafremovalIcon, 'Leaf Removal'),
+                      if (authUser.selectedServices.contains('dog-walking'))
+                        buildServiceIcon(dogwalkingIcon, 'Dog Walking'),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
-}
 
-Widget buildServiceIcon(String iconPath, String label) {
-  return Column(
-    children: [
-      Container(
-        height: 50,
-        width: 50,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(50),
-          color: AppColors.primary,
+  Widget buildServiceIcon(String iconPath, String label) {
+    return Column(
+      children: [
+        Container(
+          height: 50,
+          width: 50,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(50),
+            color: AppColors.primary,
+          ),
+          child: SvgPicture.asset(
+            iconPath,
+            width: 40,
+            height: 40,
+          ),
         ),
-        child: SvgPicture.asset(
-          iconPath,
-          width: 40,
-          height: 40,
-        ),
-      ),
-      Text(label),
-    ],
-  );
+        Text(label),
+      ],
+    );
+  }
 }

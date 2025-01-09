@@ -73,12 +73,35 @@ class AuthUserNotifier extends StateNotifier<AuthUserModel> {
   }
 
   Future<AuthUserModel?> _fetchUserDataFromFirestore(String uid) async {
-    final doc =
-        await FirebaseFirestore.instance.collection('userInfo').doc(uid).get();
-    if (doc.exists) {
-      return AuthUserModel.fromJson(doc.data()!);
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('userInfo')
+          .doc(uid)
+          .get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        return AuthUserModel.fromJson({
+          'uid': uid,
+          'fullName': data['displayName'] ?? 'No Name',
+          'userName': data['userName'] ?? 'No Username',
+          'phoneNumber': data['phoneNumber'] ?? 'No Phone Number',
+          'selectedServices': data['services'] ?? [],
+          'serviceDistance': data['serviceDistance'] ?? 0.0,
+          'schoolName': data['schoolName'] ?? 'No School',
+          'photoURL': data['photoURL'],
+          'selectedGrade': data['grade'],
+          'description': data['description'] ?? 'No Description',
+          'zipCode': data['zipCode'] ?? 'No Zip Code',
+          'isLoggedIn': true,
+        });
+      } else {
+        print("No user data found in Firestore for UID: $uid");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching user data from Firestore: $e");
+      return null;
     }
-    return null;
   }
 
   void updateUser(AuthUserModel user) {

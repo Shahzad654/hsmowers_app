@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hsmowers_app/models/auth_user_model.dart'; // Assuming authModel is here
-import 'package:hsmowers_app/screens/auth.dart';
+import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -120,7 +120,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
       submitForm(context);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => AuthScreen()),
+        MaterialPageRoute(builder: (context) => ProfileScreen()),
       );
     }
   }
@@ -209,7 +209,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => AuthScreen()),
+        MaterialPageRoute(builder: (context) => ProfileScreen()),
       );
     } catch (e) {
       print('Error during geocoding or update: $e');

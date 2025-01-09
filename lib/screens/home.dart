@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:hsmowers_app/models/auth_user_model.dart';
 import 'package:hsmowers_app/providers/auth_user_provider.dart';
-import 'package:hsmowers_app/screens/auth.dart';
 import 'package:hsmowers_app/screens/login.dart';
 import 'package:hsmowers_app/screens/other_user_profile.dart';
 import 'package:hsmowers_app/screens/user_info_screen.dart';
+import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hsmowers_app/widgets/find_mowers.dart';
@@ -35,6 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     getData();
+    checkAuthState();
   }
 
   Future<void> checkAuthState() async {
@@ -174,7 +175,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => AuthScreen()));
+                                builder: (context) => ProfileScreen()));
                       },
                       child: Icon(
                         Icons.person_2_outlined,

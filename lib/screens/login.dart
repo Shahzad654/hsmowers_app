@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hsmowers_app/models/auth_user_model.dart';
-import 'package:hsmowers_app/screens/auth.dart';
+import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:hsmowers_app/widgets/google_maps.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -95,7 +95,7 @@ class _LoginState extends State<Login> {
             (userData['serviceArea']['path'] as List).isNotEmpty) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const AuthScreen(),
+              builder: (context) => const ProfileScreen(),
             ),
           );
           return 'Successfully Logged In';

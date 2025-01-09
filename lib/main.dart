@@ -17,6 +17,13 @@ void main() async {
     await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
     await FirebaseAppCheck.instance.activate();
     print("Firebase initialized successfully");
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      print("User is logged in: ${user.uid}");
+    } else {
+      print("No user is logged in");
+    }
   } catch (e) {
     print("Error initializing Firebase: $e");
   }
@@ -25,11 +32,16 @@ void main() async {
   runApp(ProviderScope(child: const MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authUserNotifier = ref.read(authUserProvider.notifier);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      authUserNotifier.loadUserData();
+    });
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'hsmowers app',

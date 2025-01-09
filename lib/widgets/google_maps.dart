@@ -1,10 +1,10 @@
-// ignore_for_file: prefer_final_fields, prefer_const_constructors
+// ignore_for_file: prefer_final_fields, prefer_const_constructors, avoid_print, use_build_context_synchronously
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:hsmowers_app/models/auth_user_model.dart'; // Import your AuthUserModel
+import 'package:hsmowers_app/models/auth_user_model.dart';
 import 'package:hsmowers_app/screens/user_profile.dart';
 import 'package:hsmowers_app/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,7 +12,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
 class GoogleMaps extends ConsumerStatefulWidget {
-  // Change to ConsumerStatefulWidget
   const GoogleMaps({super.key});
 
   @override
@@ -24,7 +23,7 @@ class _GoogleMapsState extends ConsumerState<GoogleMaps> {
       CameraPosition(target: LatLng(32.18117, 74.18513), zoom: 14);
   Completer<GoogleMapController> _controller = Completer();
 
-  Set<Polyline> _polylines = <Polyline>{}; // Removed unused _marker list
+  Set<Polyline> _polylines = <Polyline>{};
   List<LatLng> _polylinePoints = [];
 
   late double _latitude;
@@ -72,7 +71,6 @@ class _GoogleMapsState extends ConsumerState<GoogleMaps> {
   }
 
   void _finishDrawing(WidgetRef ref) async {
-    // Accept ref as a parameter
     if (_polylinePoints.isNotEmpty) {
       List<Map<String, double>> polygonCoordinates =
           _polylinePoints.map((point) {
@@ -84,7 +82,7 @@ class _GoogleMapsState extends ConsumerState<GoogleMaps> {
 
       try {
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        final uid = ref.read(authUserProvider)?.uid; // Access uid from Riverpod
+        final uid = ref.read(authUserProvider)?.uid;
 
         if (uid != null) {
           await FirebaseFirestore.instance
@@ -125,7 +123,7 @@ class _GoogleMapsState extends ConsumerState<GoogleMaps> {
               Icons.check,
               color: Colors.white,
             ),
-            onPressed: () => _finishDrawing(ref), // Pass ref here
+            onPressed: () => _finishDrawing(ref),
           ),
         ],
       ),

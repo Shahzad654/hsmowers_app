@@ -127,6 +127,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await getData();
   }
 
+  // Future<void> _getLocation() async {
+  //   PermissionStatus permission = await Permission.location.request();
+  //   if (!permission.isGranted) {
+  //     print("Location permission denied");
+  //     return;
+  //   }
+
+  //   try {
+  //     double latitude = 39.9566;
+  //     double longitude = -85.9668;
+
+  //     List<Placemark> placemarks =
+  //         await placemarkFromCoordinates(latitude, longitude);
+  //     if (placemarks.isEmpty) {
+  //       print("No placemarks found");
+  //       return;
+  //     }
+
+  //     Placemark place = placemarks.first;
+  //     String zipCode = place.postalCode ?? 'No Zip Code Available';
+
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     await prefs.setDouble('latitude', latitude);
+  //     await prefs.setDouble('longitude', longitude);
+  //     await prefs.setString('zipCode', zipCode);
+
+  //     setState(() {
+  //       print(
+  //           'User Location: Latitude: $latitude, Longitude: $longitude, Zip Code: $zipCode');
+  //     });
+
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //           builder: (context) => FindMowers(initialZipCode: zipCode)),
+  //     );
+  //   } catch (e) {
+  //     print('Error getting location: $e');
+  //   }
+  // }
+
   Future<void> _getLocation() async {
     PermissionStatus permission = await Permission.location.request();
     if (!permission.isGranted) {
@@ -135,11 +176,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     try {
-      double latitude = 39.9566;
-      double longitude = -85.9668;
+      List<Location> locations =
+          await locationFromAddress('Your current location');
+      if (locations.isEmpty) {
+        print("No location found");
+        return;
+      }
 
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(latitude, longitude);
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+          locations.first.latitude, locations.first.longitude);
       if (placemarks.isEmpty) {
         print("No placemarks found");
         return;
@@ -149,19 +194,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       String zipCode = place.postalCode ?? 'No Zip Code Available';
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble('latitude', latitude);
-      await prefs.setDouble('longitude', longitude);
+      await prefs.setDouble('latitude', locations.first.latitude);
+      await prefs.setDouble('longitude', locations.first.longitude);
       await prefs.setString('zipCode', zipCode);
 
       setState(() {
         print(
-            'User Location: Latitude: $latitude, Longitude: $longitude, Zip Code: $zipCode');
+            'User Location: Latitude: ${locations.first.latitude}, Longitude: ${locations.first.longitude}, Zip Code: $zipCode');
       });
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) => FindMowers(initialZipCode: zipCode)),
+        MaterialPageRoute(builder: (context) => FindMowers()),
       );
     } catch (e) {
       print('Error getting location: $e');
